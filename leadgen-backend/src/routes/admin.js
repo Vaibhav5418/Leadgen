@@ -16,9 +16,6 @@ const getUserRole = (user) => {
   if (user.email === 'akshay@kology.co' || user.isAdmin === true || user.role === 'admin') {
     return 'admin';
   }
-  if (user.role === 'manager') {
-    return 'manager';
-  }
   return 'employee';
 };
 
@@ -33,14 +30,6 @@ const getPermissionsForRole = (role) => {
         { key: 'project_assignment', label: 'Project Assignment', description: 'Assign or revoke project access for team members' },
         { key: 'view_all_reports', label: 'All Analytics & Reports', description: 'Access master dashboards, employee performance, and client reports' },
         { key: 'export_data', label: 'Data & Export Access', description: 'Export contacts, activities, and analytical summaries' }
-      ];
-    case 'manager':
-      return [
-        { key: 'all_projects_view', label: 'View All Projects', description: 'View and monitor campaigns across all projects' },
-        { key: 'team_performance', label: 'Team Performance View', description: 'View cross-team performance metrics and touchpoints' },
-        { key: 'manage_campaigns', label: 'Manage Campaigns', description: 'Create and edit campaign ICPs, channels, and allocations' },
-        { key: 'manage_contacts', label: 'Manage Prospects & Contacts', description: 'Import and organize prospect lists and pipeline stages' },
-        { key: 'log_activities', label: 'Log Activities', description: 'Record calls, LinkedIn touches, and email outreach' }
       ];
     case 'employee':
     default:
@@ -80,14 +69,12 @@ router.get('/dashboard', async (req, res) => {
 
     // Calculate role breakdown
     let adminCount = 0;
-    let managerCount = 0;
     let employeeCount = 0;
     let activeEmployees = 0;
 
     allUsers.forEach((u) => {
       const effectiveRole = getUserRole(u);
       if (effectiveRole === 'admin') adminCount++;
-      else if (effectiveRole === 'manager') managerCount++;
       else employeeCount++;
 
       if (u.status !== 'suspended' && u.status !== 'inactive') {
@@ -114,7 +101,6 @@ router.get('/dashboard', async (req, res) => {
           totalAssignments,
           roleBreakdown: {
             admin: adminCount,
-            manager: managerCount,
             employee: employeeCount
           }
         },
@@ -356,10 +342,10 @@ router.put('/employees/:id/role', async (req, res) => {
     }
 
     const normalizedRole = (role || '').toLowerCase().trim();
-    if (!['admin', 'manager', 'employee'].includes(normalizedRole)) {
+    if (!['admin', 'employee'].includes(normalizedRole)) {
       return res.status(400).json({
         success: false,
-        error: 'Invalid role. Must be one of: admin, manager, employee'
+        error: 'Invalid role. Must be one of: admin, employee'
       });
     }
 
@@ -1054,13 +1040,6 @@ router.get('/permissions-matrix', (req, res) => {
           description: 'Full system ownership, employee role configuration, project allocation, and audit log inspection.',
           badgeColor: 'purple',
           permissions: getPermissionsForRole('admin')
-        },
-        {
-          role: 'manager',
-          label: 'Manager',
-          description: 'Campaign management, cross-project monitoring, prospect allocation, and team oversight.',
-          badgeColor: 'blue',
-          permissions: getPermissionsForRole('manager')
         },
         {
           role: 'employee',

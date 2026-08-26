@@ -99,7 +99,7 @@ export default function ProjectDetail() {
   const [filterNoActivity, setFilterNoActivity] = useState(searchParams.get('filterNoActivity') === 'true');
   const [filterMatchType, setFilterMatchType] = useState(searchParams.get('filterMatchType') || '');
   const [filterKpi, setFilterKpi] = useState(null); // { channel: 'linkedin'|'call'|'email', metric: string }
-  const [selectedPipeline, setSelectedPipeline] = useState('linkedin'); // 'linkedin' | 'call' | 'email'
+  const [selectedPipeline, setSelectedPipeline] = useState(''); // 'call' | 'email' | 'linkedin'
   const [kpiProspectModal, setKpiProspectModal] = useState({
     isOpen: false,
     filter: null // { channel: 'linkedin'|'call'|'email', metric: string }
@@ -125,7 +125,6 @@ export default function ProjectDetail() {
     newParams.delete('kpiOpen');
     setSearchParams(newParams, { replace: true });
   }, [searchParams, setSearchParams]);
-  const [matchStats, setMatchStats] = useState(null);
   const [expandedContacts, setExpandedContacts] = useState(new Set());
   const [contactActivities, setContactActivities] = useState({});
   const [loadingActivities, setLoadingActivities] = useState({});
@@ -144,7 +143,6 @@ export default function ProjectDetail() {
   const [bulkImportModal, setBulkImportModal] = useState(false);
   const [allProjectActivities, setAllProjectActivities] = useState([]);
   const [selectedContacts, setSelectedContacts] = useState(new Set());
-  const [showProspectSuggestions, setShowProspectSuggestions] = useState(false);
   const [bulkActivityModal, setBulkActivityModal] = useState({
     isOpen: false,
     type: null
@@ -160,6 +158,11 @@ export default function ProjectDetail() {
   const [sortOrder, setSortOrder] = useState('asc'); // 'asc' | 'desc'
   const [showStatusFilter, setShowStatusFilter] = useState(false);
   const statusFilterRef = useRef(null);
+  const [openPipeline, setOpenPipeline] = useState(null); // null | 'linkedin' | 'email' | 'call'
+
+  const togglePipeline = (pipelineKey) => {
+    setOpenPipeline(prev => (prev === pipelineKey ? null : pipelineKey));
+  };
 
   // Determine enabled activity types based on project channels
   const enabledActivityTypes = useMemo(() => {
@@ -173,6 +176,52 @@ export default function ProjectDetail() {
     // If no channels are enabled, default to all (for backward compatibility)
     return enabled.length > 0 ? enabled : ['call', 'email', 'linkedin'];
   }, [project?.channels]);
+
+  // Define pipeline options for the dropdown
+  const pipelineOptions = useMemo(() => {
+    const options = [];
+
+    if (enabledActivityTypes.includes('call')) {
+      options.push({
+        id: 'call',
+        label: 'Cold Calling Pipeline',
+        shortLabel: 'Cold Calling',
+        subtitle: 'Voice calls & disposition stages',
+        type: 'call'
+      });
+    }
+
+    if (enabledActivityTypes.includes('email')) {
+      options.push({
+        id: 'email',
+        label: 'Email Pipeline',
+        shortLabel: 'Email',
+        subtitle: 'Cold email sequences & engagement',
+        type: 'email'
+      });
+    }
+
+    if (enabledActivityTypes.includes('linkedin')) {
+      options.push({
+        id: 'linkedin',
+        label: 'LinkedIn Pipeline',
+        shortLabel: 'LinkedIn',
+        subtitle: 'InMail & connection tracking',
+        type: 'linkedin'
+      });
+    }
+
+    return options;
+  }, [enabledActivityTypes]);
+
+  const currentPipelineOption = useMemo(() => {
+    return pipelineOptions.find(o => o.id === selectedPipeline) || pipelineOptions[0] || {
+      id: '',
+      label: 'Pipeline',
+      shortLabel: 'Pipeline',
+      subtitle: ''
+    };
+  }, [pipelineOptions, selectedPipeline]);
 
   // Calculate follow-up counts for LinkedIn and Email (backend provides for calls via KPI).
   // Use one next action per contact per type (earliest nextActionDate) so each contact is counted at most once.
@@ -222,10 +271,12 @@ export default function ProjectDetail() {
     };
   }, [allProjectActivities]);
 
-  // Auto-select first enabled pipeline if current selection is not enabled
+  // Auto-select first enabled pipeline if current selection is invalid
   useEffect(() => {
-    if (enabledActivityTypes.length > 0 && !enabledActivityTypes.includes(selectedPipeline)) {
-      setSelectedPipeline(enabledActivityTypes[0]);
+    if (enabledActivityTypes.length > 0) {
+      if (!selectedPipeline || !enabledActivityTypes.includes(selectedPipeline)) {
+        setSelectedPipeline(enabledActivityTypes[0]);
+      }
     }
   }, [enabledActivityTypes, selectedPipeline]);
 
@@ -237,14 +288,11 @@ export default function ProjectDetail() {
       }
     };
 
-    if (showStatusFilter) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showStatusFilter]);
+  }, []);
 
   // Track if we're returning from Activity History to clear search
   const returningFromActivityHistoryRef = useRef(false);
@@ -816,47 +864,6 @@ export default function ProjectDetail() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactsPage, hasFiltersOrSearch, searchParams, setSearchParams]);
 
-  // Fetch similar contacts from databank (including suggestions)
-  const fetchSimilarContacts = async () => {
-    try {
-      const response = await API.get(`/projects/${id}/similar-contacts`);
-      if (response.data.success) {
-        let contactsData = response.data.data || [];
-        
-        // Filter out any contacts that were previously deleted (prevent reappearance)
-        if (deletedContactIds.size > 0) {
-          const beforeFilter = contactsData.length;
-          contactsData = contactsData.filter(contact => {
-            if (!contact._id) return true;
-            const contactIdStr = contact._id.toString ? contact._id.toString() : String(contact._id);
-            return !deletedContactIds.has(contactIdStr);
-          });
-          if (beforeFilter !== contactsData.length) {
-            devLog(`Filtered out ${beforeFilter - contactsData.length} previously deleted contact(s) from similar contacts`);
-          }
-        }
-        
-        setContacts(contactsData);
-        if (response.data.matchStats) {
-          setMatchStats(response.data.matchStats);
-        }
-        // If no ICP is defined, show message and disable suggestions
-        if (response.data.hasICP === false) {
-          setShowProspectSuggestions(false);
-          // Show message if user tried to enable suggestions
-          if (showProspectSuggestions) {
-            alert(response.data.message || 'No ICP defined for this project. Please add an ICP definition to get suggestions.');
-          }
-          return false; // Return false to indicate ICP is not available
-        }
-        return true;
-      }
-    } catch (err) {
-      console.error('Error fetching similar contacts:', err);
-      return false;
-    }
-  };
-
   // Check if project has ICP defined (must have at least one meaningful criteria)
   // Exclude default company size values (0-1000) as they're not meaningful
   const hasMeaningfulCompanySize = project?.icpDefinition?.companySizeMin !== undefined && 
@@ -966,43 +973,7 @@ export default function ProjectDetail() {
       filterLastInteraction, filterLastInteractionFrom, filterLastInteractionTo, 
       filterImportDate, filterImportDateFrom, filterImportDateTo, filterNoActivity, filterMatchType, searchParams, setSearchParams]);
 
-  // Disable suggestions if ICP is removed while suggestions are enabled
-  useEffect(() => {
-    if (showProspectSuggestions && !hasICP) {
-      setShowProspectSuggestions(false);
-      fetchImportedContacts(contactsPage).catch(err => {
-        console.error('Error fetching imported contacts:', err);
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasICP, showProspectSuggestions]);
 
-  // Toggle prospect suggestions
-  const handleToggleProspectSuggestions = async () => {
-    // Don't allow toggling if no ICP is defined
-    if (!hasICP) {
-      alert('No ICP (Ideal Customer Profile) is defined for this project. Please add an ICP definition in project settings to get suggestions.');
-      return;
-    }
-
-    const newState = !showProspectSuggestions;
-    setShowProspectSuggestions(newState);
-    
-    if (newState) {
-      // Fetch suggestions from databank
-      const success = await fetchSimilarContacts();
-      if (!success || !hasICP) {
-        // If fetch failed or no ICP, revert the state and show message
-        setShowProspectSuggestions(false);
-        if (!hasICP) {
-          alert('No ICP (Ideal Customer Profile) is defined for this project. Please add an ICP definition in project settings to get suggestions.');
-        }
-      }
-    } else {
-      // Show only imported contacts (preserve current page)
-      await fetchImportedContacts(contactsPage);
-    }
-  };
 
   const fetchAllProjectActivities = async () => {
     try {
@@ -1259,11 +1230,7 @@ export default function ProjectDetail() {
     if (!wasSaved) return;
     await fetchAllProjectActivities();
     await new Promise(resolve => setTimeout(resolve, 100));
-    if (showProspectSuggestions) {
-      await fetchSimilarContacts();
-    } else {
-      fetchImportedContacts(contactsPage);
-    }
+    fetchImportedContacts(contactsPage);
     expandedContacts.forEach(contactId => {
       const contact = contacts.find(c => (c._id || c.name) === contactId);
       if (contact) {
@@ -1281,11 +1248,7 @@ export default function ProjectDetail() {
     if (!wasSaved) return;
     await fetchAllProjectActivities();
     await new Promise(resolve => setTimeout(resolve, 100));
-    if (showProspectSuggestions) {
-      await fetchSimilarContacts();
-    } else {
-      fetchImportedContacts(contactsPage);
-    }
+    fetchImportedContacts(contactsPage);
     expandedContacts.forEach(contactId => {
       const contact = contacts.find(c => (c._id || c.name) === contactId);
       if (contact) {
@@ -2986,11 +2949,7 @@ export default function ProjectDetail() {
         setTimeout(async () => {
           try {
             // Refresh contacts from server (stay on same page)
-            if (showProspectSuggestions) {
-              await fetchSimilarContacts();
-            } else {
-              await fetchImportedContacts(contactsPage);
-            }
+            await fetchImportedContacts(contactsPage);
             
             // After refresh, ensure deleted contacts are still removed (in case they came back)
             setContacts(prevContacts => {
@@ -3125,28 +3084,6 @@ export default function ProjectDetail() {
             Report
             </button>
           <button 
-            onClick={handleToggleProspectSuggestions}
-            disabled={!hasICP}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-medium text-sm ${
-              !hasICP
-                ? 'bg-gray-100 border border-gray-300 text-gray-400 cursor-not-allowed'
-                : showProspectSuggestions
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-            title={!hasICP ? 'No ICP defined. Add an ICP definition to get suggestions.' : 'Show prospect suggestions based on ICP'}
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-            Prospect Suggestion
-            {!hasICP && (
-              <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            )}
-          </button>
-          <button 
             onClick={() => setBulkImportModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
           >
@@ -3161,80 +3098,98 @@ export default function ProjectDetail() {
 
       {/* KPI Pipeline Section */}
       {kpiMetrics && (
-        <div className="mb-4">
-          {/* Pipeline Tabs/Scroller */}
-          <div className="mb-3 overflow-x-auto -mx-1 px-1 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            <style>{`
-              .scrollbar-thin::-webkit-scrollbar {
-                height: 6px;
-              }
-              .scrollbar-thin::-webkit-scrollbar-track {
-                background: transparent;
-              }
-              .scrollbar-thin::-webkit-scrollbar-thumb {
-                background-color: #cbd5e1;
-                border-radius: 3px;
-              }
-              .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-                background-color: #94a3b8;
-              }
-            `}</style>
-            <div className="flex gap-2 min-w-max pb-2">
-              {/* LinkedIn Pipeline Button - Only show if linkedInOutreach channel is enabled */}
-              {enabledActivityTypes.includes('linkedin') && (
-                  <div
-                    onClick={() => setSelectedPipeline('linkedin')}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all cursor-pointer min-w-[150px] justify-center ${
-                      selectedPipeline === 'linkedin'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                    </svg>
-                    <span>LinkedIn Pipeline</span>
-                </div>
-              )}
-              {/* Cold Calling Pipeline Button - Only show if coldCalling channel is enabled */}
-              {enabledActivityTypes.includes('call') && (
-                <div
-                  onClick={() => setSelectedPipeline('call')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all cursor-pointer min-w-[150px] justify-center ${
-                    selectedPipeline === 'call'
-                      ? 'bg-green-600 text-white shadow-md'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+        <div className="mb-6 space-y-4">
+          {/* Small Pipeline Buttons on the Same Line */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* LinkedIn Pipeline Button */}
+            {enabledActivityTypes.includes('linkedin') && (
+              <button
+                type="button"
+                onClick={() => togglePipeline('linkedin')}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                  openPipeline === 'linkedin'
+                    ? 'bg-sky-50 border-sky-300 text-sky-900 ring-2 ring-sky-500/20'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-sky-500"></span>
+                <span>LinkedIn Pipeline</span>
+                <svg
+                  className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${
+                    openPipeline === 'linkedin' ? 'rotate-180 text-sky-600' : ''
                   }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                  <span>Cold Calling Pipeline</span>
-                </div>
-              )}
-              {/* Email Pipeline Button - Only show if coldEmail channel is enabled */}
-              {enabledActivityTypes.includes('email') && (
-                  <div
-                    onClick={() => setSelectedPipeline('email')}
-                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-xs whitespace-nowrap transition-all cursor-pointer min-w-[150px] justify-center ${
-                      selectedPipeline === 'email'
-                        ? 'bg-blue-600 text-white shadow-md'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-                    }`}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                    <span>Email Pipeline</span>
-                </div>
-              )}
-            </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Email Pipeline Button */}
+            {enabledActivityTypes.includes('email') && (
+              <button
+                type="button"
+                onClick={() => togglePipeline('email')}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                  openPipeline === 'email'
+                    ? 'bg-blue-50 border-blue-300 text-blue-900 ring-2 ring-blue-500/20'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span>Email Pipeline</span>
+                <svg
+                  className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${
+                    openPipeline === 'email' ? 'rotate-180 text-blue-600' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
+
+            {/* Cold Calling Pipeline Button */}
+            {enabledActivityTypes.includes('call') && (
+              <button
+                type="button"
+                onClick={() => togglePipeline('call')}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                  openPipeline === 'call'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-2 ring-emerald-500/20'
+                    : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300'
+                }`}
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Cold Calling Pipeline</span>
+                <svg
+                  className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-200 ${
+                    openPipeline === 'call' ? 'rotate-180 text-emerald-600' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            )}
           </div>
 
-          {/* LinkedIn KPIs - Only show if linkedInOutreach channel is enabled */}
-          {enabledActivityTypes.includes('linkedin') && selectedPipeline === 'linkedin' && kpiMetrics && (
-            <div>
-              {/* Use 2 rows on large screens for better readability */}
+          {/* LinkedIn KPIs Container - Only show if linkedInOutreach channel is enabled and open */}
+          {enabledActivityTypes.includes('linkedin') && openPipeline === 'linkedin' && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">LinkedIn Pipeline</h3>
+                <span className="text-[10px] font-semibold text-sky-700 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200">
+                  Outreach Channel
+                </span>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
               {/* Connection Sent */}
               <button
@@ -3477,10 +3432,16 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Call Pipeline Stages */}
-          {/* Cold Calling Pipeline - Only show if coldCalling channel is enabled */}
-          {enabledActivityTypes.includes('call') && selectedPipeline === 'call' && kpiMetrics && (
-            <div>
+          {/* Cold Calling KPIs Container - Only show if coldCalling channel is enabled and open */}
+          {enabledActivityTypes.includes('call') && openPipeline === 'call' && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">Cold Calling Pipeline</h3>
+                <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  Voice Channel
+                </span>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                 {/* Total Calls */}
                 <button
@@ -3744,12 +3705,17 @@ export default function ProjectDetail() {
             </div>
           )}
 
-          {/* Email KPIs */}
-          {/* Email KPIs - Only show if coldEmail channel is enabled */}
-          {enabledActivityTypes.includes('email') && selectedPipeline === 'email' && kpiMetrics && (
-            <div>
-            {/* Use 2 rows on large screens for better readability */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+          {/* Email KPIs Container - Only show if coldEmail channel is enabled and open */}
+          {enabledActivityTypes.includes('email') && openPipeline === 'email' && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-xs p-4 sm:p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">Email Pipeline</h3>
+                <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                  Email Channel
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
               {/* Emails Sent */}
               <button
                 onClick={() => openKpiProspectModal({ channel: 'email', metric: 'emailsSent' })}
@@ -4450,128 +4416,7 @@ export default function ProjectDetail() {
         )}
       </div>
 
-      {/* Results Count and Match Stats */}
-      <div className="mb-3 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-4 flex-wrap">
-          {matchStats && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {matchStats.imported > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-md border border-purple-200">
-                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                  {matchStats.imported} Imported
-                </span>
-              )}
-              {matchStats.exact > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-md border border-green-200">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  {matchStats.exact} Exact
-                </span>
-              )}
-              {matchStats.good > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-md border border-blue-200">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  {matchStats.good} Good
-                </span>
-              )}
-              {matchStats.similar > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-md border border-yellow-200">
-                  <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                  {matchStats.similar} Similar
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* ICP Recommendations Summary - Shows when suggestions are enabled */}
-      {showProspectSuggestions && hasICP && project?.icpDefinition && (
-        <div className="mb-4 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-2 border-indigo-200 rounded-2xl p-5 shadow-lg">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">ICP-Based Recommendations</h3>
-                  <p className="text-sm text-gray-600 mt-0.5">Showing prospects from system database that match your project's Ideal Customer Profile</p>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-                {project.icpDefinition.targetIndustries && project.icpDefinition.targetIndustries.length > 0 && (
-                  <div className="bg-white rounded-lg p-3 border border-indigo-100">
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Target Industries</div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {project.icpDefinition.targetIndustries.slice(0, 2).join(', ')}
-                      {project.icpDefinition.targetIndustries.length > 2 && ` +${project.icpDefinition.targetIndustries.length - 2} more`}
-                    </div>
-                  </div>
-                )}
-                {project.icpDefinition.targetJobTitles && project.icpDefinition.targetJobTitles.length > 0 && (
-                  <div className="bg-white rounded-lg p-3 border border-indigo-100">
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Target Job Titles</div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {project.icpDefinition.targetJobTitles.slice(0, 2).join(', ')}
-                      {project.icpDefinition.targetJobTitles.length > 2 && ` +${project.icpDefinition.targetJobTitles.length - 2} more`}
-                    </div>
-                  </div>
-                )}
-                {project.icpDefinition.companySizeMin !== undefined && project.icpDefinition.companySizeMax !== undefined && (
-                  <div className="bg-white rounded-lg p-3 border border-indigo-100">
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Company Size</div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {project.icpDefinition.companySizeMin.toLocaleString()} - {project.icpDefinition.companySizeMax.toLocaleString()} employees
-                    </div>
-                  </div>
-                )}
-                {project.icpDefinition.geographies && project.icpDefinition.geographies.length > 0 && (
-                  <div className="bg-white rounded-lg p-3 border border-indigo-100">
-                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Geographies</div>
-                    <div className="text-sm font-medium text-gray-900">
-                      {project.icpDefinition.geographies.slice(0, 2).join(', ')}
-                      {project.icpDefinition.geographies.length > 2 && ` +${project.icpDefinition.geographies.length - 2} more`}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {matchStats && (
-                <div className="mt-4 flex items-center gap-4 flex-wrap">
-                  <div className="text-xs text-gray-600 font-medium">
-                    Recommendations: 
-                    <span className="ml-2 inline-flex items-center gap-2">
-                      {matchStats.exact > 0 && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full font-semibold">
-                          {matchStats.exact} Exact
-                        </span>
-                      )}
-                      {matchStats.good > 0 && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold">
-                          {matchStats.good} Good
-                        </span>
-                      )}
-                      {matchStats.similar > 0 && (
-                        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full font-semibold">
-                          {matchStats.similar} Similar
-                        </span>
-                      )}
-                      {matchStats.loose > 0 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full font-semibold">
-                          {matchStats.loose} Loose
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Bulk Actions Bar - Shows when prospects are selected */}
       {selectedContacts.size > 0 && (
@@ -5034,25 +4879,21 @@ export default function ProjectDetail() {
                   );
                   
                   const handleContactRowClick = (e) => {
-                    // Don't navigate if clicking on expand button, action buttons, or their children
+                    // Don't navigate if clicking on checkbox, expand button, action buttons, or their children
                     if (
                       e.target.closest('button') ||
+                      e.target.closest('input') ||
+                      e.target.closest('select') ||
                       e.target.closest('svg') ||
                       e.target.closest('a')
                     ) {
                       return;
                     }
                     
-                    // Only navigate if contact is from databank and has a valid ID
                     if (isFromDatabank && contactIdValue) {
-                      // Build return URL with current filter params (including search query)
-                      // Use current searchParams to get ALL filter params, including ContactFilter params
                       const currentParams = new URLSearchParams(searchParams);
-                      // Remove returnTo param but keep search query
                       currentParams.delete('returnTo');
-                      // Always include current page in return URL (even if page 1)
                       currentParams.set('page', contactsPage.toString());
-                      // Ensure all current filter states are included
                       if (quickFilter) currentParams.set('quickFilter', quickFilter);
                       if (filterStatus) currentParams.set('filterStatus', filterStatus);
                       if (filterActionDate) currentParams.set('filterActionDate', filterActionDate);
@@ -5066,16 +4907,8 @@ export default function ProjectDetail() {
                       if (filterImportDateTo) currentParams.set('filterImportDateTo', filterImportDateTo);
                       if (filterNoActivity) currentParams.set('filterNoActivity', 'true');
                       if (filterMatchType) currentParams.set('filterMatchType', filterMatchType);
-                      // Include KPI filter parameters if KPI modal is open
-                      if (filterKpi) {
-                        currentParams.set('kpiChannel', filterKpi.channel);
-                        currentParams.set('kpiMetric', filterKpi.metric);
-                        currentParams.set('kpiOpen', '1');
-                      }
-                      // ContactFilter params are already in searchParams, so they'll be included automatically
                       
                       const returnUrl = `/projects/${id}${currentParams.toString() ? '?' + currentParams.toString() : ''}`;
-                      // Navigate to contact activity history page with preserved filters
                       navigate(`/contacts/${contactIdValue}/activities?projectId=${id}&returnTo=${encodeURIComponent(returnUrl)}`);
                     }
                   };
@@ -5084,11 +4917,7 @@ export default function ProjectDetail() {
                     <React.Fragment key={contactId}>
                       <tr 
                         onClick={handleContactRowClick}
-                        className={`transition-all duration-150 ${
-                          isFromDatabank 
-                            ? 'hover:bg-blue-50 cursor-pointer' 
-                            : 'hover:bg-gray-50'
-                        } ${isExpanded ? 'bg-blue-50' : ''}`}
+                        className={`transition-all duration-150 ${isFromDatabank ? 'cursor-pointer hover:bg-blue-50/50' : 'hover:bg-gray-50'} ${isExpanded ? 'bg-blue-50/60' : ''}`}
                       >
                         <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                           <input
@@ -5131,53 +4960,6 @@ export default function ProjectDetail() {
                                 <div className={`text-sm font-semibold ${isFromDatabank ? 'text-gray-900 hover:text-blue-600' : 'text-gray-900'}`}>
                                   {contact.name || 'N/A'}
                                 </div>
-                                {/* Recommendation Badge - Show only for suggestions (not imported) */}
-                                {!contact.isImported && contact.recommendationReasons && contact.recommendationReasons.length > 0 && (
-                                  <div className="group relative">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      contact.matchType === 'exact' ? 'bg-green-100 text-green-800' :
-                                      contact.matchType === 'good' ? 'bg-blue-100 text-blue-800' :
-                                      contact.matchType === 'similar' ? 'bg-yellow-100 text-yellow-800' :
-                                      'bg-gray-100 text-gray-800'
-                                    }`}>
-                                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                      </svg>
-                                      {contact.matchScore}% Match
-                                    </span>
-                                    {/* Recommendation Tooltip */}
-                                    <div className="absolute left-0 top-full mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none">
-                                      <div className="absolute -top-2 left-4 w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
-                                      <div className="relative">
-                                        <h4 className="text-xs font-bold text-gray-900 mb-2 flex items-center gap-2">
-                                          <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                          </svg>
-                                          Recommended Based on ICP
-                                        </h4>
-                                        <div className="space-y-2">
-                                          {contact.recommendationReasons.map((reason, idx) => (
-                                            <div key={idx} className="text-xs text-gray-700 bg-gray-50 rounded p-2 border-l-2 border-blue-500">
-                                              <div className="font-semibold text-gray-900 mb-1 capitalize">
-                                                {reason.type === 'industry' && '🏭 Industry Match'}
-                                                {reason.type === 'jobTitle' && '💼 Job Title Match'}
-                                                {reason.type === 'companySize' && '📊 Company Size Match'}
-                                                {reason.type === 'geography' && '🌍 Location Match'}
-                                                {reason.type === 'keywords' && '🔑 Keywords Match'}
-                                              </div>
-                                              <div className="text-gray-600">{reason.message}</div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                        <div className="mt-3 pt-2 border-t border-gray-200">
-                                          <div className="text-xs text-gray-500">
-                                            <span className="font-semibold">Match Score:</span> {contact.matchScore}% ({contact.matchType})
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
                               </div>
                               <div className="text-xs text-gray-500 mt-0.5">{contact.company || 'N/A'}</div>
                             </div>
@@ -5407,11 +5189,7 @@ export default function ProjectDetail() {
         onClose={() => setBulkImportModal(false)}
         projectId={id}
         onImportSuccess={() => {
-          if (showProspectSuggestions) {
-            fetchSimilarContacts();
-          } else {
-            fetchImportedContacts(1, false);
-          }
+          fetchImportedContacts(1, false);
           fetchAllProjectActivities();
         }}
       />
@@ -5581,48 +5359,20 @@ export default function ProjectDetail() {
                           );
 
                           const handleKpiContactRowClick = (e) => {
-                            // Don't navigate if clicking on action buttons or their children
                             if (
                               e.target.closest('button') ||
+                              e.target.closest('input') ||
                               e.target.closest('svg') ||
                               e.target.closest('a')
                             ) {
                               return;
                             }
                             
-                            // Only navigate if contact is from databank and has a valid ID
                             if (isFromDatabank && contactIdStr) {
-                              // Build return URL with current filter params (including search query)
-                              // Use current searchParams to get ALL filter params, including ContactFilter params
                               const currentParams = new URLSearchParams(searchParams);
-                              // Remove returnTo param but keep search query
                               currentParams.delete('returnTo');
-                              // Always include current page in return URL (even if page 1)
                               currentParams.set('page', contactsPage.toString());
-                              // Ensure all current filter states are included
-                              if (quickFilter) currentParams.set('quickFilter', quickFilter);
-                              if (filterStatus) currentParams.set('filterStatus', filterStatus);
-                              if (filterActionDate) currentParams.set('filterActionDate', filterActionDate);
-                              if (filterActionDateFrom) currentParams.set('filterActionDateFrom', filterActionDateFrom);
-                              if (filterActionDateTo) currentParams.set('filterActionDateTo', filterActionDateTo);
-                              if (filterLastInteraction) currentParams.set('filterLastInteraction', filterLastInteraction);
-                              if (filterLastInteractionFrom) currentParams.set('filterLastInteractionFrom', filterLastInteractionFrom);
-                              if (filterLastInteractionTo) currentParams.set('filterLastInteractionTo', filterLastInteractionTo);
-                              if (filterImportDate) currentParams.set('filterImportDate', filterImportDate);
-                              if (filterImportDateFrom) currentParams.set('filterImportDateFrom', filterImportDateFrom);
-                              if (filterImportDateTo) currentParams.set('filterImportDateTo', filterImportDateTo);
-                              if (filterNoActivity) currentParams.set('filterNoActivity', 'true');
-                              if (filterMatchType) currentParams.set('filterMatchType', filterMatchType);
-                              // Include KPI filter parameters if KPI modal is open
-                              if (filterKpi) {
-                                currentParams.set('kpiChannel', filterKpi.channel);
-                                currentParams.set('kpiMetric', filterKpi.metric);
-                                currentParams.set('kpiOpen', '1');
-                              }
-                              // ContactFilter params are already in searchParams, so they'll be included automatically
-                              
                               const returnUrl = `/projects/${id}${currentParams.toString() ? '?' + currentParams.toString() : ''}`;
-                              // Navigate to contact activity history page with preserved filters
                               navigate(`/contacts/${contactIdStr}/activities?projectId=${id}&returnTo=${encodeURIComponent(returnUrl)}`);
                             }
                           };
@@ -5632,9 +5382,7 @@ export default function ProjectDetail() {
                               key={contact._id || contact.name} 
                               onClick={handleKpiContactRowClick}
                               className={`transition-colors ${
-                                isFromDatabank 
-                                  ? 'hover:bg-blue-50 cursor-pointer' 
-                                  : 'hover:bg-gray-50'
+                                isFromDatabank ? 'hover:bg-blue-50 cursor-pointer' : 'hover:bg-gray-50'
                               }`}
                             >
                               <td className="px-4 py-3 text-sm font-semibold text-gray-900">

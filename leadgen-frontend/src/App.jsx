@@ -20,6 +20,7 @@ import FunnelProjects from './pages/FunnelProjects';
 import LinkedInFunnelDetail from './pages/LinkedInFunnelDetail';
 import ColdCallingFunnelDetail from './pages/ColdCallingFunnelDetail';
 import EmailFunnelDetail from './pages/EmailFunnelDetail';
+import ActivityHistory from './pages/ActivityHistory';
 
 // Private Route Component
 const PrivateRoute = ({ children }) => {
@@ -132,6 +133,15 @@ export default function App() {
             element={
               <PrivateRoute>
                 <ProjectDetail />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="/contacts/:contactId/activities"
+            element={
+              <PrivateRoute>
+                <ActivityHistory />
               </PrivateRoute>
             }
           />

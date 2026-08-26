@@ -330,14 +330,6 @@ export default function AdminPanel() {
         </span>
       );
     }
-    if (r === 'manager') {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-          Manager
-        </span>
-      );
-    }
     return (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
         <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
@@ -482,22 +474,15 @@ export default function AdminPanel() {
                 </div>
                 <span className="text-gray-300 font-bold">•</span>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-2xl font-bold text-blue-700">
-                    {dashboardData?.stats?.roleBreakdown?.manager || 0}
-                  </span>
-                  <span className="text-gray-600 text-xs">Mgrs</span>
-                </div>
-                <span className="text-gray-300 font-bold">•</span>
-                <div className="flex items-baseline gap-1">
                   <span className="text-2xl font-bold text-gray-800">
                     {dashboardData?.stats?.roleBreakdown?.employee || 0}
                   </span>
-                  <span className="text-gray-600 text-xs">Emps</span>
+                  <span className="text-gray-600 text-xs">Employees</span>
                 </div>
               </div>
               <div className="w-full bg-white/80 h-2 rounded-full mt-3 flex overflow-hidden border border-emerald-100">
                 <div
-                  className="bg-purple-600 h-full"
+                  className="bg-purple-600 h-full transition-all duration-500"
                   style={{
                     width: `${
                       ((dashboardData?.stats?.roleBreakdown?.admin || 0) /
@@ -508,18 +493,7 @@ export default function AdminPanel() {
                   title="Admins"
                 ></div>
                 <div
-                  className="bg-blue-600 h-full"
-                  style={{
-                    width: `${
-                      ((dashboardData?.stats?.roleBreakdown?.manager || 0) /
-                        (dashboardData?.stats?.totalEmployees || 1)) *
-                      100
-                    }%`
-                  }}
-                  title="Managers"
-                ></div>
-                <div
-                  className="bg-gray-400 h-full"
+                  className="bg-gray-400 h-full transition-all duration-500"
                   style={{
                     width: `${
                       ((dashboardData?.stats?.roleBreakdown?.employee || 0) /
@@ -676,7 +650,7 @@ export default function AdminPanel() {
                       Manage User Roles
                     </h4>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Promote or adjust employee roles to Admin, Manager, or Employee.
+                      Promote or adjust employee roles to Admin or Employee.
                     </p>
                   </div>
                 </button>
@@ -886,7 +860,6 @@ export default function AdminPanel() {
                 >
                   <option value="">All Roles</option>
                   <option value="admin">Admins Only</option>
-                  <option value="manager">Managers Only</option>
                   <option value="employee">Employees Only</option>
                 </select>
 
@@ -1312,7 +1285,7 @@ export default function AdminPanel() {
               </div>
 
               {/* Roles Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                 {/* Admin Role */}
                 <div className="bg-purple-50/60 border border-purple-200 rounded-xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-3">
@@ -1343,40 +1316,10 @@ export default function AdminPanel() {
                   </ul>
                 </div>
 
-                {/* Manager Role */}
-                <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-5 relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-blue-700">Tier 2</span>
-                    {renderRoleBadge('manager')}
-                  </div>
-                  <h4 className="text-base font-bold text-blue-950 mb-1">Team Manager</h4>
-                  <p className="text-xs text-blue-800 leading-relaxed mb-4">
-                    Campaign and team supervisor. Can monitor all projects and team activities, but cannot alter administrative security roles.
-                  </p>
-                  <ul className="space-y-2 text-xs text-blue-900 font-medium">
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                      View & Monitor all active projects
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                      View Employee Performance Analytics
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
-                      Manage Campaign Channels & ICPs
-                    </li>
-                    <li className="flex items-center gap-2 text-gray-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                      No Admin Panel / Role assignment access
-                    </li>
-                  </ul>
-                </div>
-
                 {/* Employee Role */}
                 <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Tier 3</span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Tier 2</span>
                     {renderRoleBadge('employee')}
                   </div>
                   <h4 className="text-base font-bold text-gray-900 mb-1">Outbound Employee</h4>
@@ -1410,8 +1353,7 @@ export default function AdminPanel() {
                   <thead>
                     <tr className="bg-gray-50 text-gray-700 font-bold border-b border-gray-200">
                       <th className="py-3 px-4">Feature / Platform Capability</th>
-                      <th className="py-3 px-4 text-center">Admin</th>
-                      <th className="py-3 px-4 text-center">Manager</th>
+                      <th className="py-3 px-4 text-center">Administrator</th>
                       <th className="py-3 px-4 text-center">Employee</th>
                     </tr>
                   </thead>
@@ -1420,42 +1362,35 @@ export default function AdminPanel() {
                       <td className="py-3 px-4 font-semibold text-gray-800">Admin Panel Access</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Access</td>
                       <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
-                      <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
                     </tr>
                     <tr className="bg-gray-50/50">
                       <td className="py-3 px-4 font-semibold text-gray-800">User & Role Management</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Control</td>
                       <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
-                      <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 font-semibold text-gray-800">Project Allocation & Access</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ All Projects</td>
-                      <td className="py-3 px-4 text-center text-blue-600 font-bold">✓ All Projects View</td>
                       <td className="py-3 px-4 text-center text-amber-600 font-bold">Assigned Only</td>
                     </tr>
                     <tr className="bg-gray-50/50">
                       <td className="py-3 px-4 font-semibold text-gray-800">Master Dashboard Analytics</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Access</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Access</td>
-                      <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Access</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 font-semibold text-gray-800">Employee Performance Analytics</td>
-                      <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ All Team Members</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ All Team Members</td>
                       <td className="py-3 px-4 text-center text-amber-600 font-bold">Self + Assigned</td>
                     </tr>
                     <tr className="bg-gray-50/50">
                       <td className="py-3 px-4 font-semibold text-gray-800">Prospect & Activity Operations</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Global</td>
-                      <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Global</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Assigned Only</td>
                     </tr>
                     <tr>
                       <td className="py-3 px-4 font-semibold text-gray-800">Audit Trail History</td>
                       <td className="py-3 px-4 text-center text-emerald-600 font-bold">✓ Full Access</td>
-                      <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
                       <td className="py-3 px-4 text-center text-red-500 font-bold">✕ Denied</td>
                     </tr>
                   </tbody>
@@ -1724,35 +1659,6 @@ export default function AdminPanel() {
                   </div>
                   <p className="text-xs text-purple-900/80 mt-0.5">
                     Unrestricted access to the Admin Panel, role assignments, and all projects.
-                  </p>
-                </div>
-              </label>
-
-              {/* Manager Option */}
-              <label
-                className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
-                  selectedNewRole === 'manager'
-                    ? 'bg-blue-50/70 border-blue-500 ring-2 ring-blue-500/20'
-                    : 'bg-white border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="role"
-                  value="manager"
-                  checked={selectedNewRole === 'manager'}
-                  onChange={(e) => setSelectedNewRole(e.target.value)}
-                  className="mt-1 text-blue-600 focus:ring-blue-500"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-sm text-blue-950">Manager</span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-200 text-blue-800">
-                      Supervisor
-                    </span>
-                  </div>
-                  <p className="text-xs text-blue-900/80 mt-0.5">
-                    Can monitor all active projects and team metrics. Cannot access Admin Panel.
                   </p>
                 </div>
               </label>

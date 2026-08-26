@@ -56,10 +56,10 @@ An enterprise-grade B2B outbound campaign management platform designed to orches
 - One-click export to styled Excel sheets and PDF reports.
 
 ### 5. 🛡️ Enterprise Admin Panel & Access Governance
-- **Role-Based Access Control (RBAC)**: Supports `Admin`, `Manager`, and `Employee` tiers.
-- **Employee Directory**: Search users by name, email, or employee ID; filter by role and status (`active`, `inactive`, `suspended`).
+- **Role-Based Access Control (RBAC)**: Streamlined two-tier system (`Admin` and `Employee`).
+- **Employee Directory**: Search users by name, email, or employee ID; filter by role (`Admin`, `Employee`) and status (`active`, `inactive`, `suspended`).
 - **Project Access Allocation**: Assign or revoke project permissions for team members individually or in bulk.
-- **Change Role Modal**: Guided role updates with caution warnings and self-demotion prevention.
+- **Change Role Modal**: Guided role updates between Administrator and Employee with caution warnings and self-demotion prevention.
 - **Roles & Permissions Matrix**: Visual reference of capabilities across administrative, project, and analytics modules.
 - **Audit Trail & Activity Log**: Timestamped, searchable audit logs capturing all role changes, project allocations, and user status updates with previous vs. new diff summaries.
 
@@ -148,15 +148,15 @@ LeadGen/
 
 ## 🔒 Role-Based Access Control (RBAC)
 
-| Platform Capability | Administrator (`admin`) | Manager (`manager`) | Employee (`employee`) |
-|---|:---:|:---:|:---:|
-| **Admin Panel Access** | ✅ Full Access | ❌ Denied | ❌ Denied |
-| **Manage Roles & Assign Permissions** | ✅ Full Control | ❌ Denied | ❌ Denied |
-| **View Audit Trail Logs** | ✅ Full Access | ❌ Denied | ❌ Denied |
-| **Project Access** | ✅ All Projects | ✅ All Projects | 🔒 Assigned Projects Only |
-| **Master Analytics Dashboard** | ✅ Full Access | ✅ Full Access | ✅ Full Access |
-| **Employee Performance Analytics** | ✅ All Team Members | ✅ All Team Members | 🔒 Self & Assigned |
-| **Log Prospect Touchpoints** | ✅ Global | ✅ Global | ✅ Assigned Projects |
+| Platform Capability | Administrator (`admin`) | Employee (`employee`) |
+|---|:---:|:---:|
+| **Admin Panel Access** | ✅ Full Access | ❌ Denied |
+| **Manage Roles & Assign Permissions** | ✅ Full Control | ❌ Denied |
+| **View Audit Trail Logs** | ✅ Full Access | ❌ Denied |
+| **Project Access** | ✅ All Projects | 🔒 Assigned Projects Only |
+| **Master Analytics Dashboard** | ✅ Full Access | ✅ Full Access |
+| **Employee Performance Analytics** | ✅ All Team Members | 🔒 Self & Assigned |
+| **Log Prospect Touchpoints** | ✅ Global | ✅ Assigned Projects |
 
 ---
 
