@@ -1,0 +1,26 @@
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME}/leadgen-backend:latest
+    container_name: leadgen-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    networks:
+      - leadgen-network
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/leadgen-frontend:latest
+    container_name: leadgen-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - leadgen-network
+
+networks:
+  leadgen-network:
+    driver: bridge

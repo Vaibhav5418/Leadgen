@@ -2,7 +2,12 @@ import axios from 'axios';
 
 // Get base URL and ensure it ends with /api
 const getBaseURL = () => {
-  const envURL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  const envURL = import.meta.env.VITE_API_URL;
+  if (!envURL) {
+    // In local development, default to localhost:5000/api
+    // In production Docker container, default to /api (proxied via Nginx)
+    return import.meta.env.DEV ? 'http://localhost:5000/api' : '/api';
+  }
   // Remove trailing slash if present
   const cleanURL = envURL.replace(/\/$/, '');
   // Append /api if not already present

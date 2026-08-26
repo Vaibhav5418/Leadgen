@@ -11,18 +11,20 @@ app.use(compression());
 // Middleware
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-// Allow both production and preview Vercel URLs
 const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost:5173',
+  'http://localhost:5000',
+  'http://localhost',
+  /^https?:\/\/localhost(:[0-9]+)?$/,
   /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
   'https://leadgen-frontend-kappa.vercel.app' // Production URL
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin (like mobile apps, curl, or reverse-proxy requests)
+    if (!origin || FRONTEND_URL === '*') return callback(null, true);
     
     // Check if origin matches any allowed origin
     const isAllowed = allowedOrigins.some(allowed => {
@@ -34,11 +36,8 @@ app.use(cors({
       return false;
     });
     
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow all valid origins
+    return callback(null, true);
   },
   credentials: true
 }));

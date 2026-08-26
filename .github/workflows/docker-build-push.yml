@@ -95,3 +95,24 @@ jobs:
           labels: ${{ steps.meta-frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy-to-azure:
+    name: Deploy to Azure VM
+    needs: [build-and-push-backend, build-and-push-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Execute remote SSH commands to redeploy containers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          password: ${{ secrets.AZURE_VM_PASSWORD }}
+          port: ${{ secrets.AZURE_VM_PORT || 22 }}
+          script: |
+            cd ~/app
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker image prune -af --filter "until=24h"
