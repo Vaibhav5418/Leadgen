@@ -42,6 +42,7 @@ const EMP_PERF_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 export default function EmployeePerformance() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [data, setData] = useState(null);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');

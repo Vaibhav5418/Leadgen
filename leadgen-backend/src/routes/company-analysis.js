@@ -76,11 +76,11 @@ router.post('/analyze', authenticate, async (req, res) => {
       if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.startsWith('192.168.') || host.startsWith('10.') || host.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
          return res.status(400).json({ success: false, error: 'Invalid or restricted website URL' });
       }
-    } catch (e) {
+    } catch {
       return res.status(400).json({ success: false, error: 'Invalid website URL format' });
     }
 
-    let derivedCompanyName = companyName || parsedUrl.hostname.replace(/^www\./, '');
+    const derivedCompanyName = companyName || parsedUrl.hostname.replace(/^www\./, '');
 
     // Create prompt for Groq model (allows user override)
     const defaultPrompt = `
@@ -178,7 +178,7 @@ Formatting Rules:
     res.json({
       success: true,
       data: {
-        companyName,
+        companyName: derivedCompanyName,
         website: normalizedWebsite,
         analysis,
         fullText: analysisText,
@@ -195,7 +195,7 @@ Formatting Rules:
     console.error('Error code:', error.code);
     
     // Provide more specific error messages
-    let errorMessage = 'Failed to analyze company website';
+    let errorMessage;
     let statusCode = 500;
     
     // Check for quota/billing errors (429 status)

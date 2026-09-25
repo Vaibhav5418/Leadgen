@@ -76,7 +76,7 @@ async function gatherContactData(contactId, projectId) {
     if (error.message === 'Contact does not belong to the specified project' || error.message === 'Contact not found') {
       throw error;
     }
-    throw new Error('Failed to gather contact data');
+    throw new Error('Failed to gather contact data', { cause: error });
   }
 }
 

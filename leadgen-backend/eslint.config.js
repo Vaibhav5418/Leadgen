@@ -12,10 +12,24 @@ module.exports = [
         module: "readonly",
         require: "readonly",
         __dirname: "readonly",
+        Buffer: "readonly",
+        URL: "readonly",
+        URLSearchParams: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        setImmediate: "readonly",
+        clearImmediate: "readonly",
         jest: "readonly",
         describe: "readonly",
         it: "readonly",
-        expect: "readonly"
+        test: "readonly",
+        expect: "readonly",
+        beforeAll: "readonly",
+        beforeEach: "readonly",
+        afterAll: "readonly",
+        afterEach: "readonly"
       }
     },
     rules: {

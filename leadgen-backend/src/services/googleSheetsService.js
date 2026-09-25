@@ -10,7 +10,7 @@ function getServiceAccountCredentials() {
         private_key: parsed.private_key
       };
     } catch (e) {
-      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON (must be valid JSON)');
+      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON (must be valid JSON)', { cause: e });
     }
   }
 

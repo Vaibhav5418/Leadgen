@@ -19,7 +19,7 @@ export default function AdminRoute({ children }) {
   })();
 
   const [currentUser, setCurrentUser] = useState(initialUser);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(token));
   const [isAuthorized, setIsAuthorized] = useState(() => {
     return (
       initialUser.role === 'admin' ||
@@ -30,7 +30,6 @@ export default function AdminRoute({ children }) {
 
   useEffect(() => {
     if (!token) {
-      setLoading(false);
       return;
     }
 

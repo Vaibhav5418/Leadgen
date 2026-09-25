@@ -207,7 +207,7 @@ router.get('/project/:projectId', authenticate, requireProjectAccess, async (req
     const user = req.user;
     const project = req.project;
     
-    const limit = Math.min(parseInt(req.query.limit) || 1000, 15000); // Default limit to 1000, max 15000 for frontend dashboards
+    const limit = Math.min(Number.parseInt(req.query.limit, 10) || 1000, 15000); // Default limit to 1000, max 15000 for frontend dashboards
     let activityFilter = { projectId: req.params.projectId };
     
     // For team members, show all activities in the project

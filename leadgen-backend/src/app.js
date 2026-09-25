@@ -44,8 +44,9 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// JSON body limit: 2MB is adequate for all API payloads; file uploads use separate multer middleware (10MB)
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
 // Lightweight health check endpoint (for Render uptime pings)
 // Returns immediately without checking database

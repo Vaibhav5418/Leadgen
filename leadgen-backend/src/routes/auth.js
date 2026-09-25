@@ -266,7 +266,7 @@ router.post('/request-password-reset', async (req, res) => {
     }
 
     // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     if (!emailRegex.test(email.trim())) {
       return res.status(400).json({
         success: false,
@@ -376,7 +376,7 @@ router.post('/reset-password', async (req, res) => {
     // Save the user - this will trigger the pre-save hook to hash the password
     await user.save();
 
-    console.log(`Password reset successful for: ${email}`);
+    console.log(`Password reset successful for: ${user.email}`);
 
     res.json({
       success: true,

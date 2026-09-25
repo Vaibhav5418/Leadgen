@@ -23,7 +23,7 @@ router.get('/', authenticate, async (req, res) => {
       try {
         const Contact = require('../models/Contact');
         const contactCategories = await Contact.distinct('category', {
-          category: { $exists: true, $ne: '', $ne: null }
+          category: { $exists: true, $nin: ['', null] }
         });
         
         if (contactCategories.length > 0) {
@@ -181,7 +181,7 @@ router.get('/from-contacts', authenticate, async (req, res) => {
     }
     const Contact = require('../models/Contact');
     const categories = await Contact.distinct('category', {
-      category: { $exists: true, $ne: '', $ne: null }
+      category: { $exists: true, $nin: ['', null] }
     });
     
     // Sync with Category collection
@@ -201,7 +201,7 @@ router.get('/from-contacts', authenticate, async (req, res) => {
     
     res.json({
       success: true,
-      data: categories.filter(cat => cat && cat.trim()).sort()
+      data: categories.filter(cat => cat && cat.trim()).sort((a, b) => String(a).localeCompare(String(b), undefined, { sensitivity: 'base' }))
     });
   } catch (error) {
     console.error('Error syncing categories:', error);

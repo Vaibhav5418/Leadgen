@@ -11,6 +11,14 @@ const { requireAdmin } = require('../middleware/admin');
 router.use(authenticate);
 router.use(requireAdmin);
 
+/**
+ * Escape user-supplied strings before use in new RegExp() to prevent ReDoS.
+ * MongoDB's $regex is also vulnerable to catastrophic backtracking; escaping eliminates that risk.
+ */
+function escapeRegexAdmin(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Helper to normalize user role
 const getUserRole = (user) => {
   if (user.email === 'akshay@kology.co' || user.isAdmin === true || user.role === 'admin') {
@@ -135,15 +143,15 @@ router.get('/employees', async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     // Build filter
     let filter = {};
 
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const searchRegex = new RegExp(escapeRegexAdmin(search.trim()), 'i');
       const searchConditions = [
         { name: searchRegex },
         { email: searchRegex }
@@ -681,8 +689,8 @@ router.get('/projects', async (req, res) => {
       limit = 50
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     let filter = {};
@@ -962,8 +970,8 @@ router.get('/audit-logs', async (req, res) => {
       limit = 50
     } = req.query;
 
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+    const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * limitNum;
 
     let filter = {};
@@ -973,7 +981,7 @@ router.get('/audit-logs', async (req, res) => {
     }
 
     if (search && search.trim()) {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const searchRegex = new RegExp(escapeRegexAdmin(search.trim()), 'i');
       filter.$or = [
         { performedByName: searchRegex },
         { performedByEmail: searchRegex },

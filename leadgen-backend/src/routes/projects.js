@@ -321,8 +321,8 @@ router.get('/analytics', authenticate, async (req, res) => {
           $match: {
             contact: { $ne: null },
             $or: [
-              { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-              { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+              { 'contact.email': { $exists: true, $nin: ['', null] } },
+              { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
             ]
           }
         },
@@ -1155,8 +1155,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
           $match: {
             contact: { $ne: null },
             $or: [
-              { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-              { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+              { 'contact.email': { $exists: true, $nin: ['', null] } },
+              { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
             ]
           }
         },
@@ -1228,8 +1228,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
             $match: {
               contact: { $ne: null },
               $or: [
-                { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-                { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+                { 'contact.email': { $exists: true, $nin: ['', null] } },
+                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
               ]
             }
           },
@@ -1332,8 +1332,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
             $match: {
               contact: { $ne: null },
               $or: [
-                { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-                { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+                { 'contact.email': { $exists: true, $nin: ['', null] } },
+                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
               ]
             }
           },
@@ -1561,8 +1561,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
             $match: {
               contact: { $ne: null },
               $or: [
-                { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-                { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+                { 'contact.email': { $exists: true, $nin: ['', null] } },
+                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
               ]
             }
           },
@@ -1828,8 +1828,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
             $match: {
               contact: { $ne: null },
               $or: [
-                { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-                { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+                { 'contact.email': { $exists: true, $nin: ['', null] } },
+                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
               ]
             }
           },
@@ -1945,8 +1945,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
           $match: {
             contact: { $ne: null },
             $or: [
-              { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-              { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+              { 'contact.email': { $exists: true, $nin: ['', null] } },
+              { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
             ]
           }
         },
@@ -2704,8 +2704,8 @@ router.get('/team-member-funnels', authenticate, async (req, res) => {
         $match: {
           contact: { $ne: null },
           $or: [
-            { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-            { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+            { 'contact.email': { $exists: true, $nin: ['', null] } },
+            { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
           ]
         }
       },
@@ -3406,8 +3406,8 @@ router.get('/', authenticate, async (req, res) => {
               $match: {
                 contact: { $ne: null },
                 $or: [
-                  { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-                  { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+                  { 'contact.email': { $exists: true, $nin: ['', null] } },
+                  { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
                 ]
               }
             },
@@ -3586,7 +3586,7 @@ router.get('/', authenticate, async (req, res) => {
             },
             {
               $match: {
-                activityStatus: { $ne: null, $ne: '' }
+                activityStatus: { $nin: [null, ''] }
               }
             },
             {
@@ -3754,10 +3754,11 @@ router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, r
   try {
     const projectId = req.params.id;
     const projectObjectId = new mongoose.Types.ObjectId(projectId);
+    const user = req.user;
 
     // Build activity filter
     let activityFilter = { projectId: projectObjectId };
-    if (!isAdmin) {
+    if (!isAdmin(user)) {
       activityFilter.createdBy = user._id;
     }
 
@@ -4317,9 +4318,9 @@ router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, r
 router.get('/:id/project-contacts', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const projectId = req.params.id;
-    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
     // Default limit to 50 for better performance, cap at 15000 to prevent OOM
-    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 15000);
+    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 50, 1), 15000);
     const skip = (page - 1) * limit;
     const search = req.query.search ? req.query.search.trim() : null;
 
@@ -4378,8 +4379,8 @@ router.get('/:id/project-contacts', authenticate, requireProjectAccess, async (r
           contact: { $ne: null },
           // Filter out default/test prospects (no email AND no phone)
           $or: [
-            { 'contact.email': { $exists: true, $ne: '', $ne: null } },
-            { 'contact.firstPhone': { $exists: true, $ne: '', $ne: null } }
+            { 'contact.email': { $exists: true, $nin: ['', null] } },
+            { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
           ]
         }
       },
@@ -4649,6 +4650,23 @@ router.put('/:id', authenticate, requireProjectAccess, async (req, res) => {
     };
 
     // Build update object
+    const {
+      companyName,
+      website,
+      city,
+      country,
+      industry,
+      companySize,
+      companyDescription,
+      assignedTo,
+      teamMembers,
+      status,
+      contactPerson,
+      campaignDetails,
+      channels,
+      icpDefinition
+    } = req.body || {};
+
     const updateData = {};
 
     if (companyName) updateData.companyName = companyName;
@@ -4836,7 +4854,6 @@ const columnMapping = {
   'fullname': 'name',
   'contactname': 'name',
   'personname': 'name',
-  'fullname': 'name',
   'contact': 'name',
   'person': 'name',
   'firstnamelastname': 'name',
@@ -4876,7 +4893,6 @@ const columnMapping = {
   'business': 'company',
   'corporation': 'company',
   'corp': 'company',
-  'companyname': 'company',
   'organizationname': 'company',
   'organization name': 'company',
   
@@ -4889,7 +4905,6 @@ const columnMapping = {
   'emailid': 'email',
   'email id': 'email',
   'e mail': 'email',
-  'emailaddress': 'email',
   
   // Phone variations
   'firstphone': 'firstPhone',
@@ -4920,7 +4935,6 @@ const columnMapping = {
   'companysize': 'employees',
   '# employees': 'employees',
   '#employees': 'employees',
-  'employees': 'employees',
   'no of employees': 'employees',
   'number of employees': 'employees',
   
@@ -4963,14 +4977,6 @@ const columnMapping = {
   'linkedin profile url': 'personLinkedinUrl',
   'person linkedin profile url': 'personLinkedinUrl',
   // Case variations
-  'linkedin': 'personLinkedinUrl',
-  'linkedinurl': 'personLinkedinUrl',
-  'linkedin url': 'personLinkedinUrl',
-  'linkedinprofile': 'personLinkedinUrl',
-  'personlinkedin': 'personLinkedinUrl',
-  'person linkedin': 'personLinkedinUrl',
-  'personlinkedinurl': 'personLinkedinUrl',
-  'person linkedin url': 'personLinkedinUrl',
   
   // Website
   'website': 'website',
@@ -4984,7 +4990,6 @@ const columnMapping = {
   'companylinkedinurl': 'companyLinkedinUrl',
   'companylinkedin': 'companyLinkedinUrl',
   'companylinkedinprofile': 'companyLinkedinUrl',
-  'companylinkedinurl': 'companyLinkedinUrl',
   
   // Social Media
   'facebookurl': 'facebookUrl',
@@ -4994,7 +4999,6 @@ const columnMapping = {
   'twitterurl': 'twitterUrl',
   'twitter': 'twitterUrl',
   'x': 'twitterUrl',
-  'twitterurl': 'twitterUrl',
   
   // Location
   'city': 'city',
@@ -5012,7 +5016,6 @@ const columnMapping = {
   'companyaddress': 'companyAddress',
   'address': 'companyAddress',
   'companyaddr': 'companyAddress',
-  'companyaddress': 'companyAddress',
   'companycity': 'companyCity',
   'companystate': 'companyState',
   'companycountry': 'companyCountry',
@@ -5034,7 +5037,6 @@ const columnMapping = {
   'techstack': 'technologies',
   'annualrevenue': 'annualRevenue',
   'revenue': 'annualRevenue',
-  'annualrevenue': 'annualRevenue',
   'yearlyrevenue': 'annualRevenue'
 };
 
@@ -5058,7 +5060,7 @@ function findMatchingField(columnName) {
   }
   
   // Remove common separators and try again
-  const noSeparators = lowerColumn.replace(/[_\-\s\.]/g, '');
+  const noSeparators = lowerColumn.replace(/[_\-\s.]/g, '');
   if (columnMapping[noSeparators]) {
     return columnMapping[noSeparators];
   }
@@ -5077,8 +5079,8 @@ function findMatchingField(columnName) {
     }
     
     // Also check without separators
-    const keyNoSep = keyLower.replace(/[_\-\s\.]/g, '');
-    const colNoSep = normalizedLower.replace(/[_\-\s\.]/g, '');
+    const keyNoSep = keyLower.replace(/[_\-\s.]/g, '');
+    const colNoSep = normalizedLower.replace(/[_\-\s.]/g, '');
     if ((colNoSep.includes(keyNoSep) || keyNoSep.includes(colNoSep)) && 
         (keyNoSep.length >= 3 || colNoSep.length >= 3)) {
       return columnMapping[key];
@@ -5159,7 +5161,7 @@ function extractFieldValue(normalizedRow, fieldName, additionalVariations = [], 
     }
     
     // Try without separators
-    const noSepVariation = lowerVariation.replace(/[_\-\s\.]/g, '');
+    const noSepVariation = lowerVariation.replace(/[_\-\s.]/g, '');
     if (normalizedRow[noSepVariation] !== undefined && normalizedRow[noSepVariation] !== null) {
       const strValue = String(normalizedRow[noSepVariation]);
       if (strValue.trim()) return strValue;
@@ -5417,12 +5419,8 @@ router.post('/bulk-import', authenticate, upload.single('file'), requireProjectA
             } else if (fullName && fullName.trim()) {
               // Use Full Name if available
               name = fullName.trim();
-            } else if ((firstName && firstName.trim()) || (lastName && lastName.trim())) {
-              // Fallback: combine whatever we have
-              const first = firstName && firstName.trim() ? firstName.trim() : '';
-              const last = lastName && lastName.trim() ? lastName.trim() : '';
-              name = [first, last].filter(Boolean).join(' ').trim();
             }
+            // Note: if none of firstName, lastName, or fullName has data, the fallback loop below handles it
             
             // If still no name, try to find it in any column that might contain a name
             if (!name || !name.trim()) {
@@ -5813,12 +5811,8 @@ router.post('/bulk-import', authenticate, upload.single('file'), requireProjectA
           } else if (fullName && fullName.trim()) {
             // Use Full Name if available
             name = fullName.trim();
-          } else if ((firstName && firstName.trim()) || (lastName && lastName.trim())) {
-            // Fallback: combine whatever we have
-            const first = firstName && firstName.trim() ? firstName.trim() : '';
-            const last = lastName && lastName.trim() ? lastName.trim() : '';
-            name = [first, last].filter(Boolean).join(' ').trim();
           }
+          // Note: if none of firstName, lastName, or fullName has data, the fallback loop below handles it
           
           // If still no name, try to find it in any column that might contain a name
           if (!name || !name.trim()) {

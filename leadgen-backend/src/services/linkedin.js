@@ -1,13 +1,12 @@
 // Simple mock LinkedIn fetcher. Replace with real API integration as needed.
 const https = require('https');
-const http = require('http');
 
 function extractLinkedInId(url) {
   if (!url) return null;
   const patterns = [
-    /linkedin\.com\/in\/([^\/\?]+)/i,
+    /linkedin\.com\/in\/([^/?]+)/i,
     /linkedin\.com\/profile\/view\?id=([^&]+)/i,
-    /linkedin\.com\/pub\/([^\/\?]+)/i
+    /linkedin\.com\/pub\/([^/?]+)/i
   ];
   for (const p of patterns) {
     const m = url.match(p);
@@ -144,7 +143,7 @@ async function fetchLinkedInProfilePicture(linkedinUrl) {
 function extractCompanyLinkedInId(url) {
   if (!url) return null;
   const patterns = [
-    /linkedin\.com\/company\/([^\/\?]+)/i,
+    /linkedin\.com\/company\/([^/?]+)/i,
     /linkedin\.com\/company\/view\?id=([^&]+)/i
   ];
   for (const p of patterns) {

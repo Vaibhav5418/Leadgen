@@ -645,7 +645,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       <td className="px-4 py-3 text-xs font-semibold text-gray-900 bg-yellow-50 border border-gray-300 align-top">1st Email</td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I work closely with people involved in residential projects and leasing, and I enjoy staying connected with those who are close to the day-to-day side of property work.</p>
                           <p>At Terabits, we focus on making everyday property operations a little easier by keeping rentals, billing, and maintenance in one place.</p>
                           <p>Happy to connect.</p>
@@ -653,7 +653,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I usually stay in touch with people working close to residential projects and leasing. I've found those conversations tend to be the most honest and practical.</p>
                           <p>I'm part of the Terabits team, where we focus on making everyday property operations easier to manage.</p>
                           <p>Nice to connect.</p>
@@ -662,14 +662,14 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
                           <p className="font-semibold">Subject: Exchanging notes on leasing & residential work</p>
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I usually stay in touch with people working on residential projects and leasing. I've found these conversations to be the most practical.</p>
                           <p>When it comes to daily management, where do you usually find the most friction or "extra work" in your current process?</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I tend to reach out to people in residential leasing because the conversations are usually more practical.</p>
                           <p>I'm curious—when it comes to your daily management, where do things usually get stuck or feel like a "headache" for your team?</p>
                           <p>Nice to connect,</p>
@@ -680,7 +680,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       <td className="px-4 py-3 text-xs font-semibold text-gray-900 bg-yellow-50 border border-gray-300 align-top">2nd Email</td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>Just wanted to follow up on my last note.</p>
                           <p>We usually speak with property teams who want a bit more clarity in their daily workflows without changing how they already operate.</p>
                           <p>Always good to stay in touch.</p>
@@ -688,7 +688,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>Just sharing a short follow-up.</p>
                           <p>Most of our discussions with property teams revolve around simplifying rentals, maintenance, and billing without adding extra complexity to daily work.</p>
                           <p>Happy to stay in touch.</p>
@@ -696,14 +696,14 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>Most of our discussions with property teams revolve around simplifying rentals, maintenance, and billing.</p>
                           <p>This is where Terabits usually steps in—we focus on making those everyday operations feel less like a chore so you can focus on the bigger picture.</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>That's usually where we come in. At Terabits, we focus on making those messy parts—like rentals, maintenance, and billing—feel a lot more manageable.</p>
                           <p>We try to keep the tech simple so it actually helps the team instead of adding more work to their day.</p>
                           <p>Happy to stay in touch,</p>
@@ -714,28 +714,28 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       <td className="px-4 py-3 text-xs font-semibold text-gray-900 bg-yellow-50 border border-gray-300 align-top">3rd Email</td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>One thing we often notice is that small improvements in visibility can make day-to-day property work feel much more manageable.</p>
                           <p>Thought I'd share that with you.</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>One thing I often hear is that even small clarity in systems can make a big difference in day-to-day property operations.</p>
                           <p>Thought I'd share that with you.</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>One thing I often hear is that small clarity in systems makes a big difference.</p>
                           <p>Specifically, we help by automating the repetitive stuff—like tracking maintenance requests or streamlining billing workflows—without adding extra complexity to your day-to-day work.</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>One thing I've noticed is that just adding a bit of clarity to maintenance tracking or billing can save a lot of hours.</p>
                           <p>We mostly help by automating those repetitive tasks so they just happen in the background. It's a small change that usually makes the day-to-day much smoother.</p>
                           <p>Thought I'd share that.</p>
@@ -746,7 +746,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       <td className="px-4 py-3 text-xs font-semibold text-gray-900 bg-yellow-50 border border-gray-300 align-top">4th Email</td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I'll leave it here for now.</p>
                           <p>If at any point it feels useful to exchange notes around property operations or workflows, I'm always happy to connect.</p>
                           <p>Wishing you a great week ahead.</p>
@@ -754,14 +754,14 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I won't take more of your time.</p>
                           <p>If at any point it feels useful to exchange notes around property operations or workflows, I'm always happy to connect.</p>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I won't take more of your time.</p>
                           <p>If at any point it feels useful to exchange notes around property operations or workflows, I'm always happy to connect.</p>
                           <p>Take care.</p>
@@ -769,7 +769,7 @@ export default function BulkActivityLogModal({ isOpen, onClose, type, selectedCo
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-700 border border-gray-300 align-top">
                         <div className="space-y-2">
-                          <p>Hi {{Name}},</p>
+                          <p>Hi {'{{Name}}'},</p>
                           <p>I'll leave it here as I don't want to crowd your inbox.</p>
                           <p>If you ever want to swap notes on how to make property workflows easier, I'm always happy to chat.</p>
                           <p>Wishing you the best,</p>
