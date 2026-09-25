@@ -218,21 +218,24 @@ router.get('/project/:projectId', authenticate, requireProjectAccess, async (req
     const user = req.user;
     const project = req.project;
     
+    if (!mongoose.Types.ObjectId.isValid(req.params.projectId)) {
+      return res.status(400).json({ success: false, error: 'Invalid project ID format' });
+    }
+
     const limit = Math.min(Number.parseInt(req.query.limit, 10) || 1000, 15000); // Default limit to 1000, max 15000 for frontend dashboards
-    let activityFilter = { projectId: req.params.projectId };
+    let activityFilter = { projectId: new mongoose.Types.ObjectId(req.params.projectId) };
     
     // For team members, show all activities in the project
     // For creators, show all activities in their projects
     // For non-team members, only show their own activities
-    if (!isAdmin) {
-      const project = await Project.findById(req.params.projectId).lean();
+    if (!isAdmin(user)) {
       const isTeamMember = project.teamMembers && 
         project.teamMembers.some(email => email.toLowerCase() === user.email.toLowerCase());
-      const isCreator = project.createdBy.toString() === user._id.toString();
+      const isCreator = project.createdBy && project.createdBy.toString() === user._id.toString();
       
       // Team members and creators can see all activities in the project
       if (!isTeamMember && !isCreator) {
-      activityFilter.createdBy = user._id;
+        activityFilter.createdBy = user._id;
       }
     }
     

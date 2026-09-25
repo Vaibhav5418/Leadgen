@@ -72,6 +72,103 @@ function buildNormalizedPhoneExpr(phoneExpr) {
   return buildStripSeparatorsExpr({ $trim: { input: phoneExpr } });
 }
 
+function buildDedupedProspectContactPipeline(projectFilter) {
+  return [
+    { $match: projectFilter },
+    { $match: { contactId: { $ne: null, $exists: true } } },
+    {
+      $lookup: {
+        from: PROSPECT_CONTACT_COLLECTION,
+        localField: 'contactId',
+        foreignField: '_id',
+        as: 'prospectContact'
+      }
+    },
+    {
+      $lookup: {
+        from: 'contacts',
+        localField: 'contactId',
+        foreignField: '_id',
+        as: 'legacyContact'
+      }
+    },
+    {
+      $project: {
+        projectId: 1,
+        stage: 1,
+        priority: 1,
+        createdAt: 1,
+        contact: {
+          $cond: {
+            if: { $gt: [{ $size: '$prospectContact' }, 0] },
+            then: { $arrayElemAt: ['$prospectContact', 0] },
+            else: { $arrayElemAt: ['$legacyContact', 0] }
+          }
+        }
+      }
+    },
+    {
+      $match: {
+        contact: { $ne: null },
+        $or: [
+          { 'contact.email': { $exists: true, $nin: ['', null] } },
+          { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
+        ]
+      }
+    },
+    {
+      $addFields: {
+        _email: { $toLower: { $trim: { input: { $ifNull: ['$contact.email', ''] } } } },
+        _name: { $toLower: { $trim: { input: { $ifNull: ['$contact.name', ''] } } } },
+        _phone: buildNormalizedPhoneExpr({ $ifNull: ['$contact.firstPhone', ''] })
+      }
+    },
+    {
+      $addFields: {
+        _dedupeKey: {
+          $cond: [
+            {
+              $and: [
+                { $gt: [{ $strLenCP: '$_name' }, 0] },
+                { $gt: [{ $strLenCP: '$_phone' }, 0] },
+                { $gt: [{ $strLenCP: '$_email' }, 0] }
+              ]
+            },
+            { $concat: ['npe:', '$_name', '|', '$_phone', '|', '$_email'] },
+            { $concat: ['id:', { $toString: '$contact._id' }] }
+          ]
+        }
+      }
+    },
+    {
+      $lookup: {
+        from: 'activities',
+        let: { pid: '$projectId', cid: '$contact._id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$projectId', '$$pid'] },
+                  { $eq: ['$contactId', '$$cid'] }
+                ]
+              }
+            }
+          },
+          { $sort: { createdAt: -1 } },
+          { $limit: 1 },
+          { $project: { createdAt: 1 } }
+        ],
+        as: '_lastActivity'
+      }
+    },
+    { $addFields: { _lastActivityAt: { $arrayElemAt: ['$_lastActivity.createdAt', 0] } } },
+    { $sort: { _lastActivityAt: -1, createdAt: -1 } },
+    { $group: { _id: { projectId: '$projectId', key: '$_dedupeKey' }, doc: { $first: '$$ROOT' } } },
+    { $replaceRoot: { newRoot: '$doc' } }
+  ];
+}
+
 // Create a new project
 router.post('/', authenticate, async (req, res) => {
   try {
@@ -873,7 +970,7 @@ router.get('/analytics', authenticate, async (req, res) => {
       { $limit: 12 }
     ]);
     
-    res.json({
+    const payload = {
       success: true,
       data: {
         overview: {
@@ -961,99 +1058,13 @@ router.get('/analytics', authenticate, async (req, res) => {
           activities: recentActivities
         }
       }
-    });
+    };
+
+    res.json(payload);
     // Cache successful response
     global.__projectsAnalyticsCache.set(cacheKey, {
       ts: nowMs,
-      payload: {
-        success: true,
-        data: {
-          overview: {
-            totalProjects,
-            activeProjects,
-            draftProjects,
-            completedProjects,
-            totalProspects,
-            totalActivities
-          },
-          activities: {
-            byType: activitiesByType.map(item => ({
-              type: item._id,
-              count: item.count
-            })),
-            byDate: activitiesByDate,
-            trends: {
-              labels: trendLabels,
-              call: trendCallData,
-              email: trendEmailData,
-              linkedin: trendLinkedInData
-            }
-          },
-          pipeline: {
-            stageDistribution: stageDistribution.map(item => ({
-              stage: item._id,
-              count: item.count
-            })),
-            conversion: {
-              winRate: Number.parseFloat(winRate),
-              meetingRate: Number.parseFloat(meetingRate),
-              total: conversionData.total,
-              won: conversionData.won,
-              lost: conversionData.lost,
-              meetings: conversionData.meetings,
-              sql: conversionData.sql,
-              cip: conversionData.cip
-            }
-          },
-          channels: {
-            linkedIn: channelData.linkedIn || 0,
-            email: channelData.email || 0,
-            calling: channelData.calling || 0
-          },
-          team: {
-            performance: teamPerformance.map(member => ({
-              id: member._id?.toString(),
-              name: member.name || 'Unknown',
-              email: member.email || '',
-              totalActivities: member.activityCount,
-              calls: member.calls,
-              emails: member.emails,
-              linkedin: member.linkedin
-            }))
-          },
-          projects: {
-            health: projectHealth.map(project => ({
-              id: project._id.toString(),
-              companyName: project.companyName,
-              status: project.status,
-              contactCount: project.contactCount,
-              activityCount: project.activityCount,
-              recentActivity: project.recentActivity,
-              wonCount: project.wonCount,
-              lostCount: project.lostCount,
-              healthScore: Math.round(project.healthScore)
-            })),
-            topPerformers: topProjects.map(project => ({
-              id: project._id.toString(),
-              companyName: project.companyName,
-              status: project.status,
-              contactCount: project.contactCount,
-              activityCount: project.activityCount,
-              wonCount: project.wonCount,
-              meetingCount: project.meetingCount
-            }))
-          },
-          growth: {
-            monthly: monthlyGrowth.map(item => ({
-              month: item._id,
-              count: item.count
-            }))
-          },
-          recent: {
-            activities: recentActivities
-          }
-        }
-      }
+      payload
     });
   } catch (error) {
     console.error('Error fetching project analytics:', error);
@@ -1198,212 +1209,18 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       ]).allowDiskUse(true).then(r => (r && r[0] ? r[0].total : 0)),
 
       // Prospects by stage (deduped by (name+phone+email) and latest activity)
-      (() => {
-        const base = [
-          { $match: projectFilter },
-          { $match: { contactId: { $ne: null, $exists: true } } },
-          {
-            $lookup: {
-              from: PROSPECT_CONTACT_COLLECTION,
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'prospectContact'
-            }
-          },
-          {
-            $lookup: {
-              from: 'contacts',
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'legacyContact'
-            }
-          },
-          {
-            $project: {
-              projectId: 1,
-              stage: 1,
-              priority: 1,
-              createdAt: 1,
-              contact: {
-                $cond: {
-                  if: { $gt: [{ $size: '$prospectContact' }, 0] },
-                  then: { $arrayElemAt: ['$prospectContact', 0] },
-                  else: { $arrayElemAt: ['$legacyContact', 0] }
-                }
-              }
-            }
-          },
-          {
-            $match: {
-              contact: { $ne: null },
-              $or: [
-                { 'contact.email': { $exists: true, $nin: ['', null] } },
-                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
-              ]
-            }
-          },
-          {
-            $addFields: {
-              _email: { $toLower: { $trim: { input: { $ifNull: ['$contact.email', ''] } } } },
-              _name: { $toLower: { $trim: { input: { $ifNull: ['$contact.name', ''] } } } },
-              _phone: buildNormalizedPhoneExpr({ $ifNull: ['$contact.firstPhone', ''] })
-            }
-          },
-          {
-            $addFields: {
-              _dedupeKey: {
-                $cond: [
-                  {
-                    $and: [
-                      { $gt: [{ $strLenCP: '$_name' }, 0] },
-                      { $gt: [{ $strLenCP: '$_phone' }, 0] },
-                      { $gt: [{ $strLenCP: '$_email' }, 0] }
-                    ]
-                  },
-                  { $concat: ['npe:', '$_name', '|', '$_phone', '|', '$_email'] },
-                  { $concat: ['id:', { $toString: '$contact._id' }] }
-                ]
-              }
-            }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { pid: '$projectId', cid: '$contact._id' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        { $eq: ['$projectId', '$$pid'] },
-                        { $eq: ['$contactId', '$$cid'] }
-                      ]
-                    }
-                  }
-                },
-                { $sort: { createdAt: -1 } },
-                { $limit: 1 },
-                { $project: { createdAt: 1 } }
-              ],
-              as: '_lastActivity'
-            }
-          },
-          { $addFields: { _lastActivityAt: { $arrayElemAt: ['$_lastActivity.createdAt', 0] } } },
-          { $sort: { _lastActivityAt: -1, createdAt: -1 } },
-          { $group: { _id: { projectId: '$projectId', key: '$_dedupeKey' }, doc: { $first: '$$ROOT' } } },
-          { $replaceRoot: { newRoot: '$doc' } }
-        ];
-
-        return ProjectContact.aggregate([
-          ...base,
-          { $group: { _id: '$stage', count: { $sum: 1 } } },
-          { $sort: { count: -1 } }
-        ]).allowDiskUse(true);
-      })(),
+      ProjectContact.aggregate([
+        ...buildDedupedProspectContactPipeline(projectFilter),
+        { $group: { _id: '$stage', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]).allowDiskUse(true),
 
       // Prospects by priority (deduped by (name+phone+email) and latest activity)
-      (() => {
-        const base = [
-          { $match: projectFilter },
-          { $match: { contactId: { $ne: null, $exists: true } } },
-          {
-            $lookup: {
-              from: PROSPECT_CONTACT_COLLECTION,
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'prospectContact'
-            }
-          },
-          {
-            $lookup: {
-              from: 'contacts',
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'legacyContact'
-            }
-          },
-          {
-            $project: {
-              projectId: 1,
-              stage: 1,
-              priority: 1,
-              createdAt: 1,
-              contact: {
-                $cond: {
-                  if: { $gt: [{ $size: '$prospectContact' }, 0] },
-                  then: { $arrayElemAt: ['$prospectContact', 0] },
-                  else: { $arrayElemAt: ['$legacyContact', 0] }
-                }
-              }
-            }
-          },
-          {
-            $match: {
-              contact: { $ne: null },
-              $or: [
-                { 'contact.email': { $exists: true, $nin: ['', null] } },
-                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
-              ]
-            }
-          },
-          {
-            $addFields: {
-              _email: { $toLower: { $trim: { input: { $ifNull: ['$contact.email', ''] } } } },
-              _name: { $toLower: { $trim: { input: { $ifNull: ['$contact.name', ''] } } } },
-              _phone: buildNormalizedPhoneExpr({ $ifNull: ['$contact.firstPhone', ''] })
-            }
-          },
-          {
-            $addFields: {
-              _dedupeKey: {
-                $cond: [
-                  {
-                    $and: [
-                      { $gt: [{ $strLenCP: '$_name' }, 0] },
-                      { $gt: [{ $strLenCP: '$_phone' }, 0] },
-                      { $gt: [{ $strLenCP: '$_email' }, 0] }
-                    ]
-                  },
-                  { $concat: ['npe:', '$_name', '|', '$_phone', '|', '$_email'] },
-                  { $concat: ['id:', { $toString: '$contact._id' }] }
-                ]
-              }
-            }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { pid: '$projectId', cid: '$contact._id' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        { $eq: ['$projectId', '$$pid'] },
-                        { $eq: ['$contactId', '$$cid'] }
-                      ]
-                    }
-                  }
-                },
-                { $sort: { createdAt: -1 } },
-                { $limit: 1 },
-                { $project: { createdAt: 1 } }
-              ],
-              as: '_lastActivity'
-            }
-          },
-          { $addFields: { _lastActivityAt: { $arrayElemAt: ['$_lastActivity.createdAt', 0] } } },
-          { $sort: { _lastActivityAt: -1, createdAt: -1 } },
-          { $group: { _id: { projectId: '$projectId', key: '$_dedupeKey' }, doc: { $first: '$$ROOT' } } },
-          { $replaceRoot: { newRoot: '$doc' } }
-        ];
-
-        return ProjectContact.aggregate([
-          ...base,
-          { $group: { _id: '$priority', count: { $sum: 1 } } },
-          { $sort: { count: -1 } }
-        ]).allowDiskUse(true);
-      })(),
+      ProjectContact.aggregate([
+        ...buildDedupedProspectContactPipeline(projectFilter),
+        { $group: { _id: '$priority', count: { $sum: 1 } } },
+        { $sort: { count: -1 } }
+      ]).allowDiskUse(true),
       
       // Activities by type
       Activity.aggregate([
@@ -1531,121 +1348,24 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       })(),
       
       // Stage distribution with details (deduped)
-      (() => {
-        const base = [
-          { $match: projectFilter },
-          { $match: { contactId: { $ne: null, $exists: true } } },
-          {
-            $lookup: {
-              from: PROSPECT_CONTACT_COLLECTION,
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'prospectContact'
-            }
-          },
-          {
-            $lookup: {
-              from: 'contacts',
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'legacyContact'
-            }
-          },
-          {
-            $project: {
-              projectId: 1,
-              stage: 1,
-              priority: 1,
-              createdAt: 1,
-              contact: {
-                $cond: {
-                  if: { $gt: [{ $size: '$prospectContact' }, 0] },
-                  then: { $arrayElemAt: ['$prospectContact', 0] },
-                  else: { $arrayElemAt: ['$legacyContact', 0] }
-                }
-              }
-            }
-          },
-          {
-            $match: {
-              contact: { $ne: null },
-              $or: [
-                { 'contact.email': { $exists: true, $nin: ['', null] } },
-                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
-              ]
-            }
-          },
-          {
-            $addFields: {
-              _email: { $toLower: { $trim: { input: { $ifNull: ['$contact.email', ''] } } } },
-              _name: { $toLower: { $trim: { input: { $ifNull: ['$contact.name', ''] } } } },
-              _phone: buildNormalizedPhoneExpr({ $ifNull: ['$contact.firstPhone', ''] })
-            }
-          },
-          {
-            $addFields: {
-              _dedupeKey: {
+      ProjectContact.aggregate([
+        ...buildDedupedProspectContactPipeline(projectFilter),
+        {
+          $group: {
+            _id: '$stage',
+            count: { $sum: 1 },
+            avgPriority: {
+              $avg: {
                 $cond: [
-                  {
-                    $and: [
-                      { $gt: [{ $strLenCP: '$_name' }, 0] },
-                      { $gt: [{ $strLenCP: '$_phone' }, 0] },
-                      { $gt: [{ $strLenCP: '$_email' }, 0] }
-                    ]
-                  },
-                  { $concat: ['npe:', '$_name', '|', '$_phone', '|', '$_email'] },
-                  { $concat: ['id:', { $toString: '$contact._id' }] }
+                  { $eq: ['$priority', 'High'] }, 3,
+                  { $cond: [{ $eq: ['$priority', 'Medium'] }, 2, 1] }
                 ]
               }
             }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { pid: '$projectId', cid: '$contact._id' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        { $eq: ['$projectId', '$$pid'] },
-                        { $eq: ['$contactId', '$$cid'] }
-                      ]
-                    }
-                  }
-                },
-                { $sort: { createdAt: -1 } },
-                { $limit: 1 },
-                { $project: { createdAt: 1 } }
-              ],
-              as: '_lastActivity'
-            }
-          },
-          { $addFields: { _lastActivityAt: { $arrayElemAt: ['$_lastActivity.createdAt', 0] } } },
-          { $sort: { _lastActivityAt: -1, createdAt: -1 } },
-          { $group: { _id: { projectId: '$projectId', key: '$_dedupeKey' }, doc: { $first: '$$ROOT' } } },
-          { $replaceRoot: { newRoot: '$doc' } }
-        ];
-
-        return ProjectContact.aggregate([
-          ...base,
-          {
-            $group: {
-              _id: '$stage',
-              count: { $sum: 1 },
-              avgPriority: {
-                $avg: {
-                  $cond: [
-                    { $eq: ['$priority', 'High'] }, 3,
-                    { $cond: [{ $eq: ['$priority', 'Medium'] }, 2, 1] }
-                  ]
-                }
-              }
-            }
-          },
-          { $sort: { count: -1 } }
-        ]).allowDiskUse(true);
-      })(),
+          }
+        },
+        { $sort: { count: -1 } }
+      ]).allowDiskUse(true),
       
       // Cold Calling Funnel - Get all call activities (not just latest) to count contacts that have EVER reached each stage
       Activity.aggregate([
@@ -1798,125 +1518,28 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       ]),
       
       // Conversion metrics (deduped)
-      (() => {
-        const base = [
-          { $match: projectFilter },
-          { $match: { contactId: { $ne: null, $exists: true } } },
-          {
-            $lookup: {
-              from: PROSPECT_CONTACT_COLLECTION,
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'prospectContact'
-            }
-          },
-          {
-            $lookup: {
-              from: 'contacts',
-              localField: 'contactId',
-              foreignField: '_id',
-              as: 'legacyContact'
-            }
-          },
-          {
-            $project: {
-              projectId: 1,
-              stage: 1,
-              priority: 1,
-              createdAt: 1,
-              contact: {
-                $cond: {
-                  if: { $gt: [{ $size: '$prospectContact' }, 0] },
-                  then: { $arrayElemAt: ['$prospectContact', 0] },
-                  else: { $arrayElemAt: ['$legacyContact', 0] }
-                }
-              }
-            }
-          },
-          {
-            $match: {
-              contact: { $ne: null },
-              $or: [
-                { 'contact.email': { $exists: true, $nin: ['', null] } },
-                { 'contact.firstPhone': { $exists: true, $nin: ['', null] } }
-              ]
-            }
-          },
-          {
-            $addFields: {
-              _email: { $toLower: { $trim: { input: { $ifNull: ['$contact.email', ''] } } } },
-              _name: { $toLower: { $trim: { input: { $ifNull: ['$contact.name', ''] } } } },
-              _phone: buildNormalizedPhoneExpr({ $ifNull: ['$contact.firstPhone', ''] })
-            }
-          },
-          {
-            $addFields: {
-              _dedupeKey: {
+      ProjectContact.aggregate([
+        ...buildDedupedProspectContactPipeline(projectFilter),
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            won: { $sum: { $cond: [{ $eq: ['$stage', 'WON'] }, 1, 0] } },
+            lost: { $sum: { $cond: [{ $eq: ['$stage', 'Lost'] }, 1, 0] } },
+            meetings: {
+              $sum: {
                 $cond: [
-                  {
-                    $and: [
-                      { $gt: [{ $strLenCP: '$_name' }, 0] },
-                      { $gt: [{ $strLenCP: '$_phone' }, 0] },
-                      { $gt: [{ $strLenCP: '$_email' }, 0] }
-                    ]
-                  },
-                  { $concat: ['npe:', '$_name', '|', '$_phone', '|', '$_email'] },
-                  { $concat: ['id:', { $toString: '$contact._id' }] }
+                  { $in: ['$stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] },
+                  1,
+                  0
                 ]
               }
-            }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { pid: '$projectId', cid: '$contact._id' },
-              pipeline: [
-                {
-                  $match: {
-                    $expr: {
-                      $and: [
-                        { $eq: ['$projectId', '$$pid'] },
-                        { $eq: ['$contactId', '$$cid'] }
-                      ]
-                    }
-                  }
-                },
-                { $sort: { createdAt: -1 } },
-                { $limit: 1 },
-                { $project: { createdAt: 1 } }
-              ],
-              as: '_lastActivity'
-            }
-          },
-          { $addFields: { _lastActivityAt: { $arrayElemAt: ['$_lastActivity.createdAt', 0] } } },
-          { $sort: { _lastActivityAt: -1, createdAt: -1 } },
-          { $group: { _id: { projectId: '$projectId', key: '$_dedupeKey' }, doc: { $first: '$$ROOT' } } },
-          { $replaceRoot: { newRoot: '$doc' } }
-        ];
-
-        return ProjectContact.aggregate([
-          ...base,
-          {
-            $group: {
-              _id: null,
-              total: { $sum: 1 },
-              won: { $sum: { $cond: [{ $eq: ['$stage', 'WON'] }, 1, 0] } },
-              lost: { $sum: { $cond: [{ $eq: ['$stage', 'Lost'] }, 1, 0] } },
-              meetings: {
-                $sum: {
-                  $cond: [
-                    { $in: ['$stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] },
-                    1,
-                    0
-                  ]
-                }
-              },
-              sql: { $sum: { $cond: [{ $eq: ['$stage', 'SQL'] }, 1, 0] } },
-              cip: { $sum: { $cond: [{ $eq: ['$stage', 'CIP'] }, 1, 0] } }
-            }
+            },
+            sql: { $sum: { $cond: [{ $eq: ['$stage', 'SQL'] }, 1, 0] } },
+            cip: { $sum: { $cond: [{ $eq: ['$stage', 'CIP'] }, 1, 0] } }
           }
-        ]).allowDiskUse(true);
-      })(),
+        }
+      ]).allowDiskUse(true),
       
       // Top performing prospects (by activity count), deduped by (name+phone+email)
       Activity.aggregate([

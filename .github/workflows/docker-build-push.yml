@@ -34,6 +34,12 @@ jobs:
       - name: Run backend tests
         run: cd leadgen-backend && npm test
 
+      - name: Install frontend dependencies
+        run: cd leadgen-frontend && npm ci --ignore-scripts
+
+      - name: Run frontend tests
+        run: cd leadgen-frontend && npm test -- --run
+
   build-and-push-backend:
     name: Build & Push Backend Image
     needs: [test-and-lint]
