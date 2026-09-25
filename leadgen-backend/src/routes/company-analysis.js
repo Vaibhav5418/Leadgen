@@ -45,7 +45,9 @@ router.post('/analyze', authenticate, async (req, res) => {
     }
     rateLimitMap.set(userId, userLimit);
     console.log('=== Company Analysis Request ===');
-    console.log('Request body:', req.body);
+    const safeCompName = String(req.body?.companyName || '').replace(/[\r\n]/g, ' ');
+    const safeWeb = String(req.body?.website || '').replace(/[\r\n]/g, ' ');
+    console.log('Request parameters:', { companyName: safeCompName, website: safeWeb });
     
     const { companyName, website, prompt: userPrompt } = req.body;
 

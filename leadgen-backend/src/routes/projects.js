@@ -3347,7 +3347,7 @@ router.get('/', authenticate, async (req, res) => {
 
     // Debug: Log filter for admins to verify
     if (isAdmin) {
-      console.log('Admin user - Filter:', JSON.stringify(filter, null, 2));
+      console.log('Admin user - Filter:', JSON.stringify(filter).replace(/[\r\n]/g, ''));
     }
 
     // Use aggregation for better performance - single query instead of populate + manual fetch
@@ -6157,7 +6157,8 @@ router.post('/bulk-import', authenticate, upload.single('file'), requireProjectA
           rawResult: false
         });
         projectContactsCreated = result.length;
-        console.log(`✓ Created ${projectContactsCreated} ProjectContact documents in MongoDB linking contacts to project ${projectId}`);
+        const safeProjectId = String(projectId || '').replace(/[\r\n]/g, '');
+        console.log(`✓ Created ${projectContactsCreated} ProjectContact documents in MongoDB linking contacts to project ${safeProjectId}`);
       } catch (linkError) {
         // Handle duplicate key errors (E11000)
         if (linkError.code === 11000 || linkError.writeErrors) {

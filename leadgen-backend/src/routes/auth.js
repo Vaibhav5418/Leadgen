@@ -16,7 +16,7 @@ const checkDatabaseConnection = () => {
 router.post('/register', async (req, res) => {
   try {
     console.log('=== Register Request ===');
-    console.log('Request body:', req.body);
+    console.log('Request body fields:', Object.keys(req.body || {}));
     
     // Check database connection
     if (!checkDatabaseConnection()) {
@@ -36,7 +36,9 @@ router.post('/register', async (req, res) => {
 
     const validationResult = registerSchema.safeParse(req.body);
     if (!validationResult.success) {
-      console.warn(`[${req.id}] Security Log: Registration validation failed for IP ${req.ip}`);
+      const safeId = String(req.id || '').replace(/[\r\n]/g, '');
+      const safeIp = String(req.ip || '').replace(/[\r\n]/g, '');
+      console.warn(`[${safeId}] Security Log: Registration validation failed for IP ${safeIp}`);
       return res.status(400).json({
         success: false,
         error: validationResult.error.errors[0].message
@@ -164,7 +166,9 @@ router.post('/login', async (req, res) => {
     
     const validationResult = loginSchema.safeParse(req.body);
     if (!validationResult.success) {
-      console.warn(`[${req.id}] Security Log: Failed login validation from IP ${req.ip}`);
+      const safeId = String(req.id || '').replace(/[\r\n]/g, '');
+      const safeIp = String(req.ip || '').replace(/[\r\n]/g, '');
+      console.warn(`[${safeId}] Security Log: Failed login validation from IP ${safeIp}`);
       return res.status(400).json({
         success: false,
         error: 'Email and password are required'
@@ -175,11 +179,12 @@ router.post('/login', async (req, res) => {
 
     // Normalize email (lowercase and trim)
     const normalizedEmail = email.toLowerCase().trim();
+    const safeEmail = normalizedEmail.replace(/[\r\n]/g, '');
 
     // Find user by email
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
-      console.log(`Login failed: User not found for email: ${normalizedEmail}`);
+      console.log(`Login failed: User not found for email: ${safeEmail}`);
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
@@ -196,14 +201,16 @@ router.post('/login', async (req, res) => {
     // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      console.log(`Login failed: Invalid password for email: ${normalizedEmail}`);
+      console.log(`Login failed: Invalid password for email: ${safeEmail}`);
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
       });
     }
 
-    console.log(`[${req.id}] Security Log: Login successful for: ${normalizedEmail} from IP ${req.ip}`);
+    const safeId = String(req.id || '').replace(/[\r\n]/g, '');
+    const safeIp = String(req.ip || '').replace(/[\r\n]/g, '');
+    console.log(`[${safeId}] Security Log: Login successful for: ${safeEmail} from IP ${safeIp}`);
 
     // Update lastLogin timestamp
     user.lastLogin = new Date();
@@ -287,8 +294,10 @@ router.post('/request-password-reset', async (req, res) => {
     
     // Always return success to prevent email enumeration
     if (user) {
+      const safeId = String(req.id || '').replace(/[\r\n]/g, '');
+      const safeEmail = String(email || '').replace(/[\r\n]/g, '');
       if (user.status && user.status !== 'active') {
-         console.warn(`[${req.id}] Security Log: Password reset attempted for inactive account: ${email}`);
+         console.warn(`[${safeId}] Security Log: Password reset attempted for inactive account: ${safeEmail}`);
          return res.json({ success: true, message: 'If an account exists with this email, you will receive password reset instructions.' });
       }
 
@@ -301,7 +310,7 @@ router.post('/request-password-reset', async (req, res) => {
       await user.save();
 
       // TODO: In production, send email with reset token
-      console.log(`Password reset requested for: ${email}`);
+      console.log(`Password reset requested for: ${safeEmail}`);
       console.log(`Reset Token: ${resetToken}`);
     }
 

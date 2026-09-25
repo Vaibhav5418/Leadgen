@@ -54,7 +54,8 @@ async function fetchLinkedInProfilePicture(linkedinUrl) {
           if (res.statusCode === 301 || res.statusCode === 302) {
             const location = res.headers.location;
             if (location) {
-              console.log('Redirected to:', location);
+              const safeLocation = String(location).replace(/[\r\n]/g, '');
+              console.log('Redirected to:', safeLocation);
               // Try the redirect URL
               return fetchLinkedInProfilePicture(location);
             }

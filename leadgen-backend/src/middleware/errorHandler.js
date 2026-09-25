@@ -3,7 +3,9 @@ function errorHandler(err, req, res, next) {
   const isProduction = process.env.NODE_ENV === 'production';
 
   // Log error internally safely
-  console.error(`[${req.id || 'NO_ID'}] ERROR: ${err.message}`, {
+  const safeMsg = String(err && err.message ? err.message : '').replace(/[\r\n]/g, ' ');
+  const safeId = String(req.id || 'NO_ID').replace(/[\r\n]/g, '');
+  console.error(`[${safeId}] ERROR: ${safeMsg}`, {
     method: req.method,
     url: req.originalUrl,
     userId: req.user ? req.user._id : 'unauthenticated',

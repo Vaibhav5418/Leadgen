@@ -32,8 +32,14 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built static files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose HTTP port
-EXPOSE 80
+# Touch pid file and configure permissions for non-root nginx user
+RUN touch /var/run/nginx.pid && \
+    chown -R nginx:nginx /var/run/nginx.pid /var/cache/nginx /etc/nginx/conf.d /usr/share/nginx/html
+
+USER nginx
+
+# Expose HTTP port (non-root)
+EXPOSE 8080
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]

@@ -4,6 +4,7 @@ const compression = require('compression');
 const { connectDB } = require('./db/connection');
 
 const app = express();
+app.disable('x-powered-by');
 
 // Enable compression for all responses
 app.use(compression());
