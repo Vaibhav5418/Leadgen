@@ -1532,9 +1532,9 @@ export default function ProjectDetail() {
                     </div>
                     {activity.conversationNotes && (() => {
                       // Remove contact information block if present
-                      const notes = activity.conversationNotes.replace(/\[Contact:.*?\|.*?Email:.*?\|.*?Phone:.*?\|.*?LinkedIn:.*?\]/g, '').trim();
+                      const notes = activity.conversationNotes.replace(/\[Contact:[^\]|]*\|[^\]|]*Email:[^\]|]*\|[^\]|]*Phone:[^\]|]*\|[^\]|]*LinkedIn:[^\]]*\]/g, '').trim();
                       // Also remove standalone contact info blocks
-                      const cleanedNotes = notes.replace(/\[Contact:.*?\]/g, '').trim();
+                      const cleanedNotes = notes.replace(/\[Contact:[^\]]*\]/g, '').trim();
                       return cleanedNotes ? (
                     <p className="text-sm text-gray-700 mb-2 whitespace-pre-wrap leading-relaxed">
                           {cleanedNotes}

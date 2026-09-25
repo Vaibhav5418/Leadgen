@@ -258,8 +258,8 @@ export default function MonthlyReport() {
       // Sort periods within each month and sort months
       Object.keys(monthGroups).forEach(monthKey => {
         monthGroups[monthKey].periods.sort((a, b) => {
-          const dateA = new Date(a.replace(/(\d+) (\w+) '(\d+)/, '$2 $1, 20$3'));
-          const dateB = new Date(b.replace(/(\d+) (\w+) '(\d+)/, '$2 $1, 20$3'));
+          const dateA = new Date(a.replace(/^(\d{1,2})\s+([A-Za-z]{3})\s+'(\d{2})$/, '$2 $1, 20$3'));
+          const dateB = new Date(b.replace(/^(\d{1,2})\s+([A-Za-z]{3})\s+'(\d{2})$/, '$2 $1, 20$3'));
           return dateA - dateB;
         });
       });

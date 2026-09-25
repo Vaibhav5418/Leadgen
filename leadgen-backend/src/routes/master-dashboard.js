@@ -137,7 +137,7 @@ router.get('/', authenticate, async (req, res) => {
                     $and: [
                       { $ne: ['$contactDetails.email', null] },
                       { $ne: ['$contactDetails.email', ''] },
-                      { $regexMatch: { input: '$contactDetails.email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/ } }
+                      { $regexMatch: { input: '$contactDetails.email', regex: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/ } }
                     ]
                   },
                   1,
@@ -339,7 +339,7 @@ router.get('/', authenticate, async (req, res) => {
                   $and: [
                     { $ne: ['$contactDetails.email', null] },
                     { $ne: ['$contactDetails.email', ''] },
-                    { $regexMatch: { input: '$contactDetails.email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ } }
+                    { $regexMatch: { input: '$contactDetails.email', regex: /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/ } }
                   ]
                 },
                 1,

@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Set build argument for backend API URL (can be passed during docker build)
 ARG VITE_API_URL

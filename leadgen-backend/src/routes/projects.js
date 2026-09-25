@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+router.use(express.json({ limit: '1mb' }));
 const multer = require('multer');
 const csv = require('csv-parser');
 const XLSX = require('xlsx');
@@ -22,7 +23,8 @@ const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fieldSize: 1 * 1024 * 1024 // 1MB non-file field limit
   },
   fileFilter: (req, file, cb) => {
     const fileName = file.originalname.toLowerCase();
