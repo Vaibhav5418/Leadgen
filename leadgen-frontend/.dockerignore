@@ -1,8 +1,11 @@
 node_modules
-dist
-.env
-.env.*
+npm-debug.log
+Dockerfile
+.dockerignore
 .git
 .gitignore
-.dockerignore
-*.md
+.env
+.env.*
+coverage
+dist
+build

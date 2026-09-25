@@ -3,6 +3,7 @@ const ProspectContact = require('../models/ProspectContact');
 const Contact = require('../models/Contact');
 const Activity = require('../models/Activity');
 const Project = require('../models/Project');
+const ProjectContact = require('../models/ProjectContact');
 
 // Initialize Groq client
 let groq = null;
@@ -26,6 +27,17 @@ function getGroqClient() {
  */
 async function gatherContactData(contactId, projectId) {
   try {
+    // If we have both, verify the contact actually belongs to the project!
+    if (contactId && projectId) {
+      const isLinked = await ProjectContact.exists({
+        projectId: projectId,
+        contactId: contactId
+      });
+      if (!isLinked) {
+        throw new Error('Contact does not belong to the specified project');
+      }
+    }
+
     // Try ProspectContact first, then Contact
     let contact = await ProspectContact.findById(contactId).lean();
     if (!contact) {
@@ -61,7 +73,10 @@ async function gatherContactData(contactId, projectId) {
       previousActivities
     };
   } catch (error) {
-    throw new Error(`Failed to gather contact data: ${error.message}`);
+    if (error.message === 'Contact does not belong to the specified project' || error.message === 'Contact not found') {
+      throw error;
+    }
+    throw new Error('Failed to gather contact data');
   }
 }
 

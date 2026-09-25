@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const { JWT_SECRET } = require('../config/env');
 
 const authMiddleware = async (req, res, next) => {
   try {
@@ -21,6 +21,13 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({
         success: false,
         error: 'User not found. Invalid token.'
+      });
+    }
+
+    if (user.status && user.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        error: 'Account is inactive or suspended.'
       });
     }
 

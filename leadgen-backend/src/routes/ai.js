@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { generatePersonalizedEmail, generatePersonalizedLinkedInMessage } = require('../services/aiService');
 const authenticate = require('../middleware/auth');
+const { requireProjectAccess } = require('../middleware/projectAccess');
 
 /**
  * Generate personalized email
@@ -9,7 +10,7 @@ const authenticate = require('../middleware/auth');
  * Body: { contactId, projectId, baseTemplate?, templateType? }
  * templateType: 'introduction-email' | 'follow-up-email' | 'value-proposition-email' | 'no-template'
  */
-router.post('/generate-email', authenticate, async (req, res) => {
+router.post('/generate-email', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const { contactId, projectId, baseTemplate, templateType } = req.body;
 
@@ -24,6 +25,13 @@ router.post('/generate-email', authenticate, async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Project ID is required'
+      });
+    }
+
+    if (baseTemplate && baseTemplate.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Base template exceeds maximum allowed length of 5000 characters'
       });
     }
 
@@ -53,9 +61,12 @@ router.post('/generate-email', authenticate, async (req, res) => {
       errorMessage = 'Groq API quota exceeded. Please check your Groq account billing and add credits.';
     } else if (error.message?.includes('Contact not found')) {
       statusCode = 404;
-      errorMessage = 'Contact not found';
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (error.message?.includes('Contact does not belong')) {
+      statusCode = 403;
+      errorMessage = 'Access denied: Contact does not belong to the specified project';
+    } else {
+      // Do not leak raw error messages to the client
+      errorMessage = 'Unable to generate the requested content.';
     }
 
     res.status(statusCode).json({
@@ -70,7 +81,7 @@ router.post('/generate-email', authenticate, async (req, res) => {
  * POST /api/ai/generate-linkedin
  * Body: { contactId, projectId, baseTemplate? }
  */
-router.post('/generate-linkedin', authenticate, async (req, res) => {
+router.post('/generate-linkedin', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const { contactId, projectId, baseTemplate } = req.body;
 
@@ -85,6 +96,13 @@ router.post('/generate-linkedin', authenticate, async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Project ID is required'
+      });
+    }
+
+    if (baseTemplate && baseTemplate.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Base template exceeds maximum allowed length of 5000 characters'
       });
     }
 
@@ -112,9 +130,12 @@ router.post('/generate-linkedin', authenticate, async (req, res) => {
       errorMessage = 'Groq API quota exceeded. Please check your Groq account billing and add credits.';
     } else if (error.message?.includes('Contact not found')) {
       statusCode = 404;
-      errorMessage = 'Contact not found';
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else if (error.message?.includes('Contact does not belong')) {
+      statusCode = 403;
+      errorMessage = 'Access denied: Contact does not belong to the specified project';
+    } else {
+      // Do not leak raw error messages to the client
+      errorMessage = 'Unable to generate the requested content.';
     }
 
     res.status(statusCode).json({

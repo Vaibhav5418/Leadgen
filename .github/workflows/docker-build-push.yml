@@ -9,9 +9,35 @@ on:
       - 'v*.*.*'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
+  test-and-lint:
+    name: Run Tests and Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          
+      - name: Install backend dependencies
+        run: cd leadgen-backend && npm ci || npm install
+        
+      - name: Run backend tests
+        run: cd leadgen-backend && npm test
+        
+      # Optional: Lint if configured
+      # - name: Run backend linter
+      #   run: cd leadgen-backend && npm run lint
+
   build-and-push-backend:
     name: Build & Push Backend Image
+    needs: [test-and-lint]
     runs-on: ubuntu-latest
 
     steps:
@@ -55,6 +81,7 @@ jobs:
 
   build-and-push-frontend:
     name: Build & Push Frontend Image
+    needs: [test-and-lint]
     runs-on: ubuntu-latest
 
     steps:

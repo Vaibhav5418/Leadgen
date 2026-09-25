@@ -3,8 +3,9 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const crypto = require('crypto');
+const { z } = require('zod');
+const { JWT_SECRET } = require('../config/env');
 
 // Helper to check database connection
 const checkDatabaseConnection = () => {
@@ -26,42 +27,25 @@ router.post('/register', async (req, res) => {
       });
     }
     
-    const { email, password, name } = req.body;
+    // Zod Validation for Registration
+    const registerSchema = z.object({
+      email: z.string().email('Please provide a valid email address').max(254),
+      password: z.string().min(6, 'Password must be at least 6 characters long').max(1024),
+      name: z.string().max(200).optional(),
+    });
 
-    // Validation
-    if (!email || !email.trim()) {
-      console.log('Validation failed: Email is required');
+    const validationResult = registerSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      console.warn(`[${req.id}] Security Log: Registration validation failed for IP ${req.ip}`);
       return res.status(400).json({
         success: false,
-        error: 'Email is required'
+        error: validationResult.error.errors[0].message
       });
     }
 
-    if (!password || !password.trim()) {
-      console.log('Validation failed: Password is required');
-      return res.status(400).json({
-        success: false,
-        error: 'Password is required'
-      });
-    }
+    const { email, password, name } = validationResult.data;
 
-    if (password.length < 6) {
-      console.log('Validation failed: Password too short');
-      return res.status(400).json({
-        success: false,
-        error: 'Password must be at least 6 characters long'
-      });
-    }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      console.log('Validation failed: Invalid email format');
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide a valid email address'
-      });
-    }
 
     // Check if user already exists
     console.log('Checking for existing user...');
@@ -172,15 +156,22 @@ router.post('/login', async (req, res) => {
       });
     }
     
-    const { email, password } = req.body;
-
-    // Validation
-    if (!email || !password) {
+    // Zod validation for Login
+    const loginSchema = z.object({
+      email: z.string().email('Please provide a valid email address'),
+      password: z.string().min(1, 'Password is required')
+    });
+    
+    const validationResult = loginSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      console.warn(`[${req.id}] Security Log: Failed login validation from IP ${req.ip}`);
       return res.status(400).json({
         success: false,
         error: 'Email and password are required'
       });
     }
+    
+    const { email, password } = validationResult.data;
 
     // Normalize email (lowercase and trim)
     const normalizedEmail = email.toLowerCase().trim();
@@ -195,6 +186,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    if (user.status && user.status !== 'active') {
+      return res.status(403).json({
+        success: false,
+        error: 'Account is inactive or suspended.'
+      });
+    }
+
     // Check password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
@@ -205,7 +203,7 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    console.log(`Login successful for: ${normalizedEmail}`);
+    console.log(`[${req.id}] Security Log: Login successful for: ${normalizedEmail} from IP ${req.ip}`);
 
     // Update lastLogin timestamp
     user.lastLogin = new Date();
@@ -288,11 +286,23 @@ router.post('/request-password-reset', async (req, res) => {
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     
     // Always return success to prevent email enumeration
-    // In production, you would send an email with a reset token here
     if (user) {
+      if (user.status && user.status !== 'active') {
+         console.warn(`[${req.id}] Security Log: Password reset attempted for inactive account: ${email}`);
+         return res.json({ success: true, message: 'If an account exists with this email, you will receive password reset instructions.' });
+      }
+
+      // Generate secure token
+      const resetToken = crypto.randomBytes(32).toString('hex');
+      const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+      
+      user.resetPasswordToken = hashedToken;
+      user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes
+      await user.save();
+
       // TODO: In production, send email with reset token
-      // For now, we'll allow direct password reset
       console.log(`Password reset requested for: ${email}`);
+      console.log(`Reset Token: ${resetToken}`);
     }
 
     res.json({
@@ -311,12 +321,12 @@ router.post('/request-password-reset', async (req, res) => {
 // Reset password
 router.post('/reset-password', async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { token, newPassword } = req.body;
 
-    if (!email || !email.trim()) {
+    if (!token) {
       return res.status(400).json({
         success: false,
-        error: 'Email is required'
+        error: 'Token is required'
       });
     }
 
@@ -334,15 +344,6 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
-      return res.status(400).json({
-        success: false,
-        error: 'Please provide a valid email address'
-      });
-    }
-
     // Check database connection
     if (!checkDatabaseConnection()) {
       return res.status(503).json({
@@ -351,18 +352,26 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // Find user by email
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+    // Find user by token and verify expiry
+    const user = await User.findOne({ 
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
-        error: 'User not found'
+        error: 'Token is invalid or has expired'
       });
     }
 
     // Update password - assign directly and save
     // The pre-save hook will automatically hash it
     user.password = newPassword.trim();
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
     
     // Save the user - this will trigger the pre-save hook to hash the password
     await user.save();

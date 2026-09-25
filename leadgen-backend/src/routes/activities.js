@@ -6,12 +6,14 @@ const ProspectContact = require('../models/ProspectContact');
 const Contact = require('../models/Contact');
 const ProjectContact = require('../models/ProjectContact');
 const authenticate = require('../middleware/auth');
+const Project = require('../models/Project');
+const { requireProjectAccess, canAccessProject, isAdmin } = require('../middleware/projectAccess');
 
 // Mongoose automatically pluralizes and lowercases: 'ProspectContact' -> 'prospectcontacts'
 const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
 
 // Create a new activity
-router.post('/', authenticate, async (req, res) => {
+router.post('/', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const {
       projectId,
@@ -38,35 +40,14 @@ router.post('/', authenticate, async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!projectId || !type) {
+    if (!type) {
       return res.status(400).json({
         success: false,
-        error: 'Project ID and activity type are required'
+        error: 'Activity type is required'
       });
     }
 
-    // Verify user has access to this project (creator or team member)
-    const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-    if (!isAdmin) {
-      const Project = require('../models/Project');
-      const project = await Project.findById(projectId);
-      if (!project) {
-        return res.status(404).json({
-          success: false,
-          error: 'Project not found'
-        });
-      }
-      const isCreator = project.createdBy.toString() === user._id.toString();
-      const isTeamMember = project.teamMembers && 
-        project.teamMembers.some(email => email.toLowerCase() === user.email.toLowerCase());
-      if (!isCreator && !isTeamMember) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this project'
-        });
-      }
-    }
+    const project = req.project;
 
     // Status is now optional for all activity types (Email, LinkedIn, and Call)
     // Conversation Notes is now optional - no minimum length validation
@@ -221,33 +202,12 @@ router.post('/', authenticate, async (req, res) => {
 });
 
 // Get all activities for a project
-router.get('/project/:projectId', authenticate, async (req, res) => {
+router.get('/project/:projectId', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-    const Project = require('../models/Project');
+    const project = req.project;
     
-    // Verify user has access to this project (creator or team member)
-    if (!isAdmin) {
-      const project = await Project.findById(req.params.projectId);
-      if (!project) {
-        return res.status(404).json({
-          success: false,
-          error: 'Project not found'
-        });
-      }
-      const isCreator = project.createdBy.toString() === user._id.toString();
-      const isTeamMember = project.teamMembers && 
-        project.teamMembers.some(email => email.toLowerCase() === user.email.toLowerCase());
-      if (!isCreator && !isTeamMember) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied to this project'
-        });
-      }
-    }
-    
-    const limit = Math.min(parseInt(req.query.limit) || 1000, 5000); // Default limit to 1000, max 5000 for performance
+    const limit = Math.min(parseInt(req.query.limit) || 1000, 15000); // Default limit to 1000, max 15000 for frontend dashboards
     let activityFilter = { projectId: req.params.projectId };
     
     // For team members, show all activities in the project
@@ -697,6 +657,9 @@ router.get('/team-performance', authenticate, async (req, res) => {
 // Get a single activity
 router.get('/:id', authenticate, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
+    }
     const activity = await Activity.findById(req.params.id).lean();
 
     if (!activity) {
@@ -704,6 +667,11 @@ router.get('/:id', authenticate, async (req, res) => {
         success: false,
         error: 'Activity not found'
       });
+    }
+
+    const project = await Project.findById(activity.projectId);
+    if (!project || !canAccessProject(req.user, project)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
     }
 
     res.json({
@@ -742,6 +710,10 @@ router.put('/:id', authenticate, async (req, res) => {
       linkedinDate
     } = req.body;
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
+    }
+
     const activity = await Activity.findById(req.params.id);
 
     if (!activity) {
@@ -749,6 +721,15 @@ router.put('/:id', authenticate, async (req, res) => {
         success: false,
         error: 'Activity not found'
       });
+    }
+
+    const project = await Project.findById(activity.projectId);
+    if (!project || !canAccessProject(req.user, project)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    if (!isAdmin(req.user) && activity.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, error: 'Cannot modify another user\'s activity' });
     }
 
     // Validate next action date is within 7 days (if provided)
@@ -885,6 +866,9 @@ router.put('/:id', authenticate, async (req, res) => {
 // Delete an activity
 router.delete('/:id', authenticate, async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
+    }
     const activity = await Activity.findById(req.params.id);
 
     if (!activity) {
@@ -892,6 +876,15 @@ router.delete('/:id', authenticate, async (req, res) => {
         success: false,
         error: 'Activity not found'
       });
+    }
+
+    const project = await Project.findById(activity.projectId);
+    if (!project || !canAccessProject(req.user, project)) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    if (!isAdmin(req.user) && activity.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, error: 'Cannot delete another user\'s activity' });
     }
 
     await Activity.findByIdAndDelete(req.params.id);

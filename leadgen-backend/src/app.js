@@ -9,35 +9,38 @@ const app = express();
 app.use(compression());
 
 // Middleware
+const requestIdMiddleware = require('./middleware/requestId');
+app.use(requestIdMiddleware);
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 const allowedOrigins = [
-  FRONTEND_URL,
-  'http://localhost:5173',
-  'http://localhost:5000',
-  'http://localhost',
-  /^https?:\/\/localhost(:[0-9]+)?$/,
-  /^https:\/\/.*\.vercel\.app$/, // Allow all Vercel preview URLs
-  'https://leadgen-frontend-kappa.vercel.app' // Production URL
+  process.env.FRONTEND_URL,
+  ...(process.env.FRONTEND_PREVIEW_URLS || '')
+    .split(',')
+    .map(url => url.trim())
+    .filter(Boolean)
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, or reverse-proxy requests)
-    if (!origin || FRONTEND_URL === '*') return callback(null, true);
+    if (!origin) {
+      // Allow localhost dev or backend health checks
+      return callback(null, true);
+    }
     
-    // Check if origin matches any allowed origin
-    const isAllowed = allowedOrigins.some(allowed => {
-      if (typeof allowed === 'string') {
-        return origin === allowed;
-      } else if (allowed instanceof RegExp) {
-        return allowed.test(origin);
+    // In development mode, allow local frontend servers
+    if (process.env.NODE_ENV !== 'production') {
+      const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+      if (isLocalhost) {
+        return callback(null, true);
       }
-      return false;
-    });
+    }
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
     
-    // Allow all valid origins
-    return callback(null, true);
+    return callback(new Error('Origin not allowed by CORS'));
   },
   credentials: true
 }));
@@ -74,5 +77,9 @@ app.get('/api/health', (req, res) => {
     database: isDBConnected() ? 'Connected' : 'Disconnected'
   });
 });
+
+// Global Error Handler
+const errorHandler = require('./middleware/errorHandler');
+app.use(errorHandler);
 
 module.exports = app;

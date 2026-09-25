@@ -3,12 +3,17 @@ const router = express.Router();
 const Category = require('../models/Category');
 const Project = require('../models/Project');
 const authenticate = require('../middleware/auth');
+const { isAdmin } = require('../middleware/projectAccess');
+
+function escapeRegex(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 // Get all categories (including projects)
 router.get('/', authenticate, async (req, res) => {
   try {
     const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
+    const userIsAdmin = isAdmin(user);
     
     // Check if any categories exist, if not, sync from contacts
     const categoryCount = await Category.countDocuments({ isActive: true });
@@ -25,8 +30,9 @@ router.get('/', authenticate, async (req, res) => {
           const categoryPromises = contactCategories
             .filter(cat => cat && cat.trim())
             .map(async (catName) => {
+              const safeName = escapeRegex(catName.trim());
               const existing = await Category.findOne({ 
-                name: { $regex: new RegExp(`^${catName.trim()}$`, 'i') }
+                name: { $regex: new RegExp(`^${safeName}$`, 'i') }
               });
               if (!existing) {
                 await Category.create({ name: catName.trim() });
@@ -49,7 +55,7 @@ router.get('/', authenticate, async (req, res) => {
     
     // Get projects (filter by user unless admin - include projects where user is creator OR team member)
     let projectFilter = {};
-    if (!isAdmin) {
+    if (!userIsAdmin) {
       projectFilter.$or = [
         { createdBy: user._id },
         { teamMembers: { $in: [user.email.toLowerCase()] } }
@@ -83,26 +89,38 @@ router.get('/', authenticate, async (req, res) => {
     console.error('Error fetching categories:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Failed to retrieve categories'
     });
   }
 });
 
 // Create a new category
-router.post('/', async (req, res) => {
+router.post('/', authenticate, async (req, res) => {
   try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ success: false, error: 'Only admins can create categories' });
+    }
+
     const { name, description } = req.body;
     
-    if (!name || !name.trim()) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({
         success: false,
         error: 'Category name is required'
       });
     }
+
+    if (name.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Category name is too long'
+      });
+    }
     
     // Check if category already exists
+    const safeName = escapeRegex(name.trim());
     const existingCategory = await Category.findOne({ 
-      name: { $regex: new RegExp(`^${name.trim()}$`, 'i') }
+      name: { $regex: new RegExp(`^${safeName}$`, 'i') }
     });
     
     if (existingCategory) {
@@ -150,14 +168,17 @@ router.post('/', async (req, res) => {
     
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Failed to create category'
     });
   }
 });
 
 // Get distinct categories from contacts (for migration/backward compatibility)
-router.get('/from-contacts', async (req, res) => {
+router.get('/from-contacts', authenticate, async (req, res) => {
   try {
+    if (!isAdmin(req.user)) {
+      return res.status(403).json({ success: false, error: 'Only admins can sync categories' });
+    }
     const Contact = require('../models/Contact');
     const categories = await Contact.distinct('category', {
       category: { $exists: true, $ne: '', $ne: null }
@@ -167,8 +188,9 @@ router.get('/from-contacts', async (req, res) => {
     const categoryPromises = categories
       .filter(cat => cat && cat.trim())
       .map(async (catName) => {
+        const safeName = escapeRegex(catName.trim());
         const existing = await Category.findOne({ 
-          name: { $regex: new RegExp(`^${catName.trim()}$`, 'i') }
+          name: { $regex: new RegExp(`^${safeName}$`, 'i') }
         });
         if (!existing) {
           await Category.create({ name: catName.trim() });
@@ -185,7 +207,7 @@ router.get('/from-contacts', async (req, res) => {
     console.error('Error syncing categories:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Failed to sync categories'
     });
   }
 });

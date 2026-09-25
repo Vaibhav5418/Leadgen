@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, lazy, Suspense, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import {
@@ -47,7 +47,38 @@ export default function EmployeePerformance() {
   const [activeSection, setActiveSection] = useState('overview');
   const [timeFilter, setTimeFilter] = useState('last7days');
 
+  const fetchEmployeePerformance = useCallback(async (signal) => {
+    try {
+      setLoading(true);
+      const response = await API.get('/projects/employee-performance', {
+        params: { timeFilter },
+        signal
+      });
+      if (response.data.success) {
+        const perfData = response.data.data;
+        setData(perfData);
+        if (perfData.employees.length > 0 && !selectedEmployee) {
+          setSelectedEmployee(perfData.employees[0].userId);
+        }
+        
+        // Cache the response
+        employeePerformanceCache[timeFilter || 'all'] = {
+          data: perfData,
+          timestamp: Date.now()
+        };
+      }
+    } catch (err) {
+      if (err.name === 'CanceledError') return;
+      console.error('Error fetching employee performance:', err);
+      setError('Failed to load performance data');
+    } finally {
+      setLoading(false);
+    }
+  }, [timeFilter, selectedEmployee]);
+
   useEffect(() => {
+    const controller = new AbortController();
+    
     const load = async () => {
       const key = timeFilter || 'all';
       const entry = employeePerformanceCache[key];
@@ -59,13 +90,13 @@ export default function EmployeePerformance() {
         }
         setLoading(false);
       } else {
-        await fetchEmployeePerformance();
+        await fetchEmployeePerformance(controller.signal);
       }
     };
 
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeFilter]);
+    return () => controller.abort();
+  }, [timeFilter, fetchEmployeePerformance, selectedEmployee]);
 
   // Listen for activity saved events to automatically refresh data
   useEffect(() => {
@@ -86,32 +117,9 @@ export default function EmployeePerformance() {
     return () => {
       window.removeEventListener('activitySaved', handleActivitySaved);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeFilter]);
+  }, [fetchEmployeePerformance]);
 
-  const fetchEmployeePerformance = async () => {
-    try {
-      setLoading(true);
-      const response = await API.get('/projects/employee-performance', {
-        params: { timeFilter }
-      });
-      if (response.data.success) {
-        const perfData = response.data.data;
-        setData(perfData);
-        employeePerformanceCache[timeFilter || 'all'] = {
-          data: perfData,
-          timestamp: Date.now(),
-        };
-        if (perfData.employees.length > 0 && !selectedEmployee) {
-          setSelectedEmployee(perfData.employees[0].userId);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching employee performance:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const currentEmployee = useMemo(() => {
     if (!data || !selectedEmployee) return null;

@@ -1,4 +1,4 @@
-require('dotenv').config();   // FIRST LINE
+require('./src/config/env');   // FIRST LINE
 const app = require('./src/app.js');
 const cron = require('node-cron');
 const axios = require('axios');

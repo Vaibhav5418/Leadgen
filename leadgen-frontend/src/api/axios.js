@@ -56,6 +56,17 @@ API.interceptors.response.use(
       console.error('Error Details:', JSON.stringify(error.response.data, null, 2));
       console.error('Request URL:', error.config?.baseURL + error.config?.url);
       console.error('Request Method:', error.config?.method?.toUpperCase());
+
+      if (error.response.status === 401) {
+        // Clear invalid session
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        
+        // Redirect to login if not already there, to avoid redirect loops
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
     } else if (error.request) {
       // Request made but no response received
       console.error('API Network Error - No response received');

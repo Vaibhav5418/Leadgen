@@ -22,8 +22,19 @@ router.get('/', authenticate, async (req, res) => {
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Get all projects - all users can see all data in master dashboard
-    const allProjects = await Project.find().lean();
+    const user = req.user;
+    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
+
+    // Get all projects the user has access to
+    let projectFilter = {};
+    if (!isAdmin) {
+      projectFilter.$or = [
+        { createdBy: user._id },
+        { teamMembers: { $in: [user.email.toLowerCase()] } }
+      ];
+    }
+    
+    const allProjects = await Project.find(projectFilter).lean();
     const projectIds = allProjects.map(p => p._id);
 
     // Parallel queries for performance
@@ -46,7 +57,7 @@ router.get('/', authenticate, async (req, res) => {
       alerts
     ] = await Promise.all([
       // Active projects count
-      Project.countDocuments({ status: 'active' }),
+      Project.countDocuments({ status: 'active', ...projectFilter }),
 
       // Total leads in play (prospects in active projects)
       ProjectContact.countDocuments({ 
@@ -93,6 +104,15 @@ router.get('/', authenticate, async (req, res) => {
         },
         { $unwind: { path: '$project', preserveNullAndEmptyArrays: true } },
         {
+          $lookup: {
+            from: 'prospectcontacts',
+            localField: 'contactId',
+            foreignField: '_id',
+            as: 'contactDetails'
+          }
+        },
+        { $unwind: { path: '$contactDetails', preserveNullAndEmptyArrays: true } },
+        {
           $group: {
             _id: '$projectId',
             projectName: { $first: '$project.companyName' },
@@ -105,6 +125,35 @@ router.get('/', authenticate, async (req, res) => {
               $sum: {
                 $cond: [
                   { $in: ['$stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] },
+                  1,
+                  0
+                ]
+              }
+            },
+            withValidEmail: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ['$contactDetails.email', null] },
+                      { $ne: ['$contactDetails.email', ''] },
+                      { $regexMatch: { input: '$contactDetails.email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ } }
+                    ]
+                  },
+                  1,
+                  0
+                ]
+              }
+            },
+            withPhone: {
+              $sum: {
+                $cond: [
+                  {
+                    $and: [
+                      { $ne: ['$contactDetails.firstPhone', null] },
+                      { $ne: ['$contactDetails.firstPhone', ''] }
+                    ]
+                  },
                   1,
                   0
                 ]
@@ -129,6 +178,8 @@ router.get('/', authenticate, async (req, res) => {
             sql: 1,
             cip: 1,
             meetings: 1,
+            withValidEmail: 1,
+            withPhone: 1,
             totalActivities: { $size: '$activities' },
             conversionRate: {
               $cond: [
@@ -141,6 +192,23 @@ router.get('/', authenticate, async (req, res) => {
               $cond: [
                 { $gt: ['$totalProspects', 0] },
                 { $multiply: [{ $divide: ['$meetings', '$totalProspects'] }, 100] },
+                0
+              ]
+            },
+            dataQualityScore: {
+              $cond: [
+                { $gt: ['$totalProspects', 0] },
+                {
+                  $divide: [
+                    {
+                      $add: [
+                        { $multiply: [{ $divide: ['$withValidEmail', '$totalProspects'] }, 100] },
+                        { $multiply: [{ $divide: ['$withPhone', '$totalProspects'] }, 100] }
+                      ]
+                    },
+                    2
+                  ]
+                },
                 0
               ]
             }
@@ -251,25 +319,35 @@ router.get('/', authenticate, async (req, res) => {
       ]),
 
       // Data quality metrics
-      ProspectContact.aggregate([
+      ProjectContact.aggregate([
+        { $match: { projectId: { $in: projectIds } } },
+        {
+          $lookup: {
+            from: 'prospectcontacts',
+            localField: 'contactId',
+            foreignField: '_id',
+            as: 'contactDetails'
+          }
+        },
+        { $unwind: { path: '$contactDetails', preserveNullAndEmptyArrays: true } },
         {
           $project: {
-            hasEmail: { $cond: [{ $and: [{ $ne: ['$email', null] }, { $ne: ['$email', ''] }] }, 1, 0] },
+            hasEmail: { $cond: [{ $and: [{ $ne: ['$contactDetails.email', null] }, { $ne: ['$contactDetails.email', ''] }] }, 1, 0] },
             hasValidEmail: {
               $cond: [
                 {
                   $and: [
-                    { $ne: ['$email', null] },
-                    { $ne: ['$email', ''] },
-                    { $regexMatch: { input: '$email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ } }
+                    { $ne: ['$contactDetails.email', null] },
+                    { $ne: ['$contactDetails.email', ''] },
+                    { $regexMatch: { input: '$contactDetails.email', regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ } }
                   ]
                 },
                 1,
                 0
               ]
             },
-            hasPhone: { $cond: [{ $and: [{ $ne: ['$firstPhone', null] }, { $ne: ['$firstPhone', ''] }] }, 1, 0] },
-            hasLinkedIn: { $cond: [{ $and: [{ $ne: ['$personLinkedinUrl', null] }, { $ne: ['$personLinkedinUrl', ''] }] }, 1, 0] }
+            hasPhone: { $cond: [{ $and: [{ $ne: ['$contactDetails.firstPhone', null] }, { $ne: ['$contactDetails.firstPhone', ''] }] }, 1, 0] },
+            hasLinkedIn: { $cond: [{ $and: [{ $ne: ['$contactDetails.personLinkedinUrl', null] }, { $ne: ['$contactDetails.personLinkedinUrl', ''] }] }, 1, 0] }
           }
         },
         {
@@ -878,12 +956,12 @@ router.get('/', authenticate, async (req, res) => {
               meetings: p.meetings
             })),
           worstDataQualityProjects: projectMetrics
+            .sort((a, b) => a.dataQualityScore - b.dataQualityScore)
+            .slice(0, 10)
             .map(p => ({
               ...p,
-              dataQualityScore: 0 // Placeholder - would need to calculate per project
-            }))
-            .sort((a, b) => a.dataQualityScore - b.dataQualityScore)
-            .slice(0, 10),
+              dataQualityScore: parseFloat(p.dataQualityScore.toFixed(2))
+            })),
           channelEfficiency: {
             linkedin: {
               acceptanceRate: linkedinTotal > 0 ? parseFloat(((linkedinAccepted / linkedinTotal) * 100).toFixed(2)) : 0,

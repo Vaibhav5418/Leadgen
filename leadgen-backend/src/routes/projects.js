@@ -12,6 +12,7 @@ const ProjectContact = require('../models/ProjectContact');
 const Activity = require('../models/Activity');
 const User = require('../models/User');
 const authenticate = require('../middleware/auth');
+const { requireProjectAccess, getProjectAccessFilter, isAdmin, canAccessProject } = require('../middleware/projectAccess');
 
 // Get the actual MongoDB collection name for ProspectContact
 // Mongoose automatically pluralizes and lowercases: 'ProspectContact' -> 'prospectcontacts'
@@ -20,7 +21,9 @@ const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
-  // No file size limit - allow any size (removed limits object)
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
   fileFilter: (req, file, cb) => {
     const fileName = file.originalname.toLowerCase();
     const allowedExtensions = ['.csv', '.xlsx', '.xls'];
@@ -163,18 +166,9 @@ router.post('/', authenticate, async (req, res) => {
 
 // Toggle project active status
 // IMPORTANT: This route must come before /:id to avoid route conflicts
-router.patch('/:id/status', authenticate, async (req, res) => {
+router.patch('/:id/status', authenticate, requireProjectAccess, async (req, res) => {
   try {
-    const projectId = req.params.id;
     const { isActive } = req.body;
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid project ID format'
-      });
-    }
 
     // Validate isActive is a boolean
     if (typeof isActive !== 'boolean') {
@@ -184,14 +178,7 @@ router.patch('/:id/status', authenticate, async (req, res) => {
       });
     }
 
-    const project = await Project.findById(projectId);
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
+    const project = req.project;
 
     // Update status: active if isActive is true, draft if false
     project.status = isActive ? 'active' : 'draft';
@@ -3743,38 +3730,9 @@ router.get('/', authenticate, async (req, res) => {
 });
 
 // Get a single project
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', authenticate, requireProjectAccess, async (req, res) => {
   try {
-    const projectId = req.params.id;
-    const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid project ID format'
-      });
-    }
-
-    let filter = { _id: projectId };
-    
-    // Filter by user unless admin - include projects where user is creator OR team member
-    if (!isAdmin) {
-      filter.$or = [
-        { _id: projectId, createdBy: user._id },
-        { _id: projectId, teamMembers: { $in: [user.email.toLowerCase()] } }
-      ];
-    }
-
-    const project = await Project.findOne(filter).lean();
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
+    const project = await Project.findById(req.project._id).lean();
 
     res.json({
       success: true,
@@ -3792,34 +3750,10 @@ router.get('/:id', authenticate, async (req, res) => {
 
 
 // Get KPI metrics for a project
-router.get('/:id/kpi-metrics', authenticate, async (req, res) => {
+router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const projectId = req.params.id;
-    const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid project ID format'
-      });
-    }
-
     const projectObjectId = new mongoose.Types.ObjectId(projectId);
-
-    // Check if project exists and user has access
-    let projectFilter = { _id: projectObjectId };
-    if (!isAdmin) {
-      projectFilter.createdBy = user._id;
-    }
-    const projectExists = await Project.exists(projectFilter);
-    if (!projectExists) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
 
     // Build activity filter
     let activityFilter = { projectId: projectObjectId };
@@ -4380,45 +4314,16 @@ router.get('/:id/kpi-metrics', authenticate, async (req, res) => {
 });
 
 // Get imported contacts for a project (only contacts already linked to project)
-router.get('/:id/project-contacts', authenticate, async (req, res) => {
+router.get('/:id/project-contacts', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const projectId = req.params.id;
-    const page = parseInt(req.query.page) || 1;
-    // Default limit to 50 for better performance - can be increased if needed
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    // Default limit to 50 for better performance, cap at 15000 to prevent OOM
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 15000);
     const skip = (page - 1) * limit;
     const search = req.query.search ? req.query.search.trim() : null;
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid project ID format'
-      });
-    }
-
-    const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-    
-    // Use aggregation for better performance with large datasets
     const projectObjectId = new mongoose.Types.ObjectId(projectId);
-
-    // Check if project exists and user has access (lightweight check)
-    // Include projects where user is creator OR team member
-    let projectFilter = { _id: projectObjectId };
-    if (!isAdmin) {
-      projectFilter.$or = [
-        { _id: projectObjectId, createdBy: user._id },
-        { _id: projectObjectId, teamMembers: { $in: [user.email.toLowerCase()] } }
-      ];
-    }
-    const projectExists = await Project.exists(projectFilter);
-    if (!projectExists) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
 
     // Aggregation for Prospect Management list.
     // IMPORTANT: We dedupe in the DB (by identifier) so pagination.total is accurate and stable.
@@ -4712,50 +4617,25 @@ router.get('/:id/project-contacts', authenticate, async (req, res) => {
 
 
 // Update a project
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const projectId = req.params.id;
+    const project = req.project;
+    const user = req.user;
+
+    // Only creator or admin can edit project details
+    if (!isAdmin(user) && project.createdBy.toString() !== user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only project creators or admins can edit project details'
+      });
+    }
 
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(projectId)) {
       return res.status(400).json({
         success: false,
         error: 'Invalid project ID format'
-      });
-    }
-
-    const {
-      companyName,
-      website,
-      city,
-      country,
-      industry,
-      companySize,
-      companyDescription,
-      contactPerson,
-      campaignDetails,
-      channels,
-      icpDefinition,
-      assignedTo,
-      teamMembers,
-      status
-    } = req.body;
-
-    const user = req.user;
-    const isAdmin = user.isAdmin || user.email === 'akshay@kology.co';
-    
-    // Check if user has access (creator or admin)
-    let projectFilter = { _id: projectId };
-    if (!isAdmin) {
-      projectFilter.createdBy = user._id; // Only creator can edit
-    }
-    
-    const project = await Project.findOne(projectFilter);
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found or access denied'
       });
     }
 
@@ -4844,7 +4724,7 @@ router.put('/:id', authenticate, async (req, res) => {
 
 // Delete project contacts (bulk remove prospects from project)
 // IMPORTANT: This route must come BEFORE the generic /:id route to avoid route matching conflicts
-router.delete('/:projectId/project-contacts', authenticate, async (req, res) => {
+router.delete('/:projectId/project-contacts', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const { projectId } = req.params;
     const { contactIds } = req.body; // Array of contact IDs to remove
@@ -4873,15 +4753,6 @@ router.delete('/:projectId/project-contacts', authenticate, async (req, res) => 
       });
     }
 
-    // Verify project exists
-    const project = await Project.findOne({ _id: projectId });
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
-
     // Convert contact IDs to ObjectIds
     const contactObjectIds = contactIds.map(id => new mongoose.Types.ObjectId(id));
 
@@ -4889,11 +4760,6 @@ router.delete('/:projectId/project-contacts', authenticate, async (req, res) => 
     const projectContactResult = await ProjectContact.deleteMany({
       projectId: projectId,
       contactId: { $in: contactObjectIds }
-    });
-
-    // Also delete prospects from ProspectContact collection (database)
-    const prospectContactResult = await ProspectContact.deleteMany({
-      _id: { $in: contactObjectIds }
     });
 
     // Also delete related activities for these contacts in this project
@@ -4906,11 +4772,10 @@ router.delete('/:projectId/project-contacts', authenticate, async (req, res) => 
 
     res.json({
       success: true,
-      message: `Successfully deleted ${totalDeleted} prospect(s) from project and database`,
+      message: `Successfully deleted ${totalDeleted} prospect(s) from project`,
       data: {
         deletedCount: totalDeleted,
         projectContactsDeleted: projectContactResult.deletedCount,
-        prospectsDeleted: prospectContactResult.deletedCount,
         activitiesDeleted: activityResult.deletedCount
       }
     });
@@ -4924,29 +4789,20 @@ router.delete('/:projectId/project-contacts', authenticate, async (req, res) => 
 });
 
 // Delete a project
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const projectId = req.params.id;
+    const project = req.project;
+    const user = req.user;
 
-    // Validate ObjectId
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      return res.status(400).json({
+    if (!isAdmin(user) && project.createdBy.toString() !== user._id.toString()) {
+      return res.status(403).json({
         success: false,
-        error: 'Invalid project ID format'
+        error: 'Only project creators or admins can delete projects'
       });
     }
 
-    const project = await Project.findOneAndDelete({
-      _id: projectId,
-      createdBy: req.user._id
-    });
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
+    await Project.findByIdAndDelete(projectId);
 
     res.json({
       success: true,
@@ -5335,7 +5191,7 @@ function extractFieldValue(normalizedRow, fieldName, additionalVariations = [], 
 }
 
 // Bulk import prospects
-router.post('/bulk-import', authenticate, upload.single('file'), async (req, res) => {
+router.post('/bulk-import', authenticate, upload.single('file'), requireProjectAccess, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
@@ -5361,17 +5217,8 @@ router.post('/bulk-import', authenticate, upload.single('file'), async (req, res
       });
     }
 
-    // Verify project exists
-    const project = await Project.findOne({
-      _id: projectId
-    });
-
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
+    // We already checked project via requireProjectAccess
+    const project = req.project;
 
     // Parse file (CSV, XLSX, or XLS)
     const contacts = [];
@@ -6152,108 +5999,95 @@ router.post('/bulk-import', authenticate, upload.single('file'), async (req, res
 
     // Check for duplicates in ProspectContact collection only
     const newContacts = [];
-    const existingContacts = [];
+    const existingContactIds = [];
     const duplicateEmails = new Set();
     const duplicateNameCompany = new Set();
 
-    for (const contact of contactsToImport) {
-      let isDuplicate = false;
-      let duplicateReason = '';
+    // 1. Collect unique keys
+    const emailsToQuery = [...new Set(contactsToImport.map(c => c.email?.trim().toLowerCase()).filter(Boolean))];
+    const nameCompanyPairs = [];
+    const seenPairs = new Set();
+    for (const c of contactsToImport) {
+      if (c.name && c.company) {
+        const key = `${c.name.trim().toLowerCase()}|${c.company.trim().toLowerCase()}`;
+        if (!seenPairs.has(key)) {
+          seenPairs.add(key);
+          nameCompanyPairs.push({ name: c.name.trim().toLowerCase(), company: c.company.trim().toLowerCase() });
+        }
+      }
+    }
 
-      // Normalize values for comparison
+    // 2. Fetch existing in batches
+    const existingByEmailMap = new Map();
+    const batchSize = 1000;
+    for (let i = 0; i < emailsToQuery.length; i += batchSize) {
+      const batch = emailsToQuery.slice(i, i + batchSize);
+      const docs = await ProspectContact.find({ 
+        email: { $in: batch.map(e => new RegExp(`^${e.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i')) }
+      }).select('_id email').lean();
+      docs.forEach(d => {
+        if (d.email) existingByEmailMap.set(d.email.toLowerCase(), d._id);
+      });
+    }
+
+    const existingByNameCompanyMap = new Map();
+    for (let i = 0; i < nameCompanyPairs.length; i += batchSize) {
+      const batch = nameCompanyPairs.slice(i, i + batchSize);
+      if (batch.length === 0) continue;
+      const orQuery = batch.map(p => ({
+        name: new RegExp(`^${p.name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i'),
+        company: new RegExp(`^${p.company.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i')
+      }));
+      const docs = await ProspectContact.find({ $or: orQuery }).select('_id name company').lean();
+      docs.forEach(d => {
+        if (d.name && d.company) {
+          existingByNameCompanyMap.set(`${d.name.toLowerCase()}|${d.company.toLowerCase()}`, d._id);
+        }
+      });
+    }
+
+    // 3. Categorize contacts
+    for (const contact of contactsToImport) {
+      let foundId = null;
       const normalizedEmail = contact.email ? contact.email.trim().toLowerCase() : '';
       const normalizedName = contact.name ? contact.name.trim().toLowerCase() : '';
       const normalizedCompany = contact.company ? contact.company.trim().toLowerCase() : '';
 
-      // Primary check: Email (if available)
-      if (normalizedEmail) {
-        const existingByEmail = await ProspectContact.findOne({
-          email: { $regex: new RegExp(`^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-        });
-        
-        if (existingByEmail) {
-          isDuplicate = true;
-          duplicateReason = `Email "${contact.email}" already exists in ProspectContact collection`;
-          duplicateEmails.add(normalizedEmail);
+      if (normalizedEmail && existingByEmailMap.has(normalizedEmail)) {
+        foundId = existingByEmailMap.get(normalizedEmail);
+        duplicateEmails.add(normalizedEmail);
+      } else if (normalizedName && normalizedCompany) {
+        const key = `${normalizedName}|${normalizedCompany}`;
+        if (existingByNameCompanyMap.has(key)) {
+          foundId = existingByNameCompanyMap.get(key);
+          duplicateNameCompany.add(key);
         }
       }
 
-      // Secondary check: Name + Company combination (if email not found and both name and company exist)
-      if (!isDuplicate && normalizedName && normalizedCompany) {
-        const existingByNameCompany = await ProspectContact.findOne({
-          name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
-          company: { $regex: new RegExp(`^${normalizedCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-        });
-        
-        if (existingByNameCompany) {
-          isDuplicate = true;
-          duplicateReason = `Name "${contact.name}" and company "${contact.company}" combination already exists in ProspectContact collection`;
-          duplicateNameCompany.add(`${normalizedName}|${normalizedCompany}`);
-        }
-      }
-
-      if (isDuplicate) {
-        existingContacts.push({
-          ...contact,
-          duplicateReason
-        });
+      if (foundId) {
+        existingContactIds.push(foundId);
       } else {
         newContacts.push(contact);
       }
     }
 
-    console.log(`Duplicate check completed: ${newContacts.length} new contacts, ${existingContacts.length} duplicates found in ProspectContact collection`);
+    console.log(`Duplicate check completed: ${newContacts.length} new contacts, ${existingContactIds.length} duplicates found in ProspectContact collection`);
 
-    // Create new contacts in database (only non-duplicates)
+    // 4. Create new contacts in database
     let createdContacts = [];
     if (newContacts.length > 0) {
       try {
-        // Insert only new contacts (duplicates already filtered out)
         createdContacts = await ProspectContact.insertMany(newContacts, { ordered: false });
         console.log(`✓ Created ${createdContacts.length} new prospect contacts in ProspectContact collection`);
       } catch (insertError) {
-        // Handle partial inserts (some might succeed)
         if (insertError.writeErrors) {
           console.error('Some contacts failed to insert:', insertError.writeErrors.length);
-          // Get successfully inserted contacts
           const insertedIds = insertError.insertedIds || {};
           createdContacts = Object.values(insertedIds).map(id => ({ _id: id }));
-          
-          // Log errors but continue - some inserts may have failed due to unique constraints
           console.log(`Note: Some contacts had insertion errors, continuing with successfully inserted contacts`);
         } else {
           throw insertError;
         }
-      }
-    }
-
-    // Handle existing contacts (duplicates found in ProspectContact)
-    // Get the existing contact IDs from ProspectContact collection
-    const existingContactIds = [];
-    for (const existingContact of existingContacts) {
-      const normalizedEmail = existingContact.email ? existingContact.email.trim().toLowerCase() : '';
-      const normalizedName = existingContact.name ? existingContact.name.trim().toLowerCase() : '';
-      const normalizedCompany = existingContact.company ? existingContact.company.trim().toLowerCase() : '';
-
-      let foundContact = null;
-      
-      // Find by email first
-      if (normalizedEmail) {
-        foundContact = await ProspectContact.findOne({
-          email: { $regex: new RegExp(`^${normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-        });
-      }
-      
-      // If not found by email, try name + company
-      if (!foundContact && normalizedName && normalizedCompany) {
-        foundContact = await ProspectContact.findOne({
-          name: { $regex: new RegExp(`^${normalizedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') },
-          company: { $regex: new RegExp(`^${normalizedCompany.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
-        });
-      }
-      
-      if (foundContact) {
-        existingContactIds.push(foundContact._id);
       }
     }
 
@@ -6339,7 +6173,7 @@ router.post('/bulk-import', authenticate, upload.single('file'), async (req, res
     const totalSkipped = skipped;
 
     const newContactsCount = createdContacts.length;
-    const existingContactsCount = existingContacts.length;
+    const existingContactsCount = existingContactIds.length;
     
     console.log(`\n=== Bulk Import Summary ===`);
     console.log(`✓ ProspectContact Collection: ${newContactsCount} new prospect contacts created`);
@@ -6375,7 +6209,7 @@ router.post('/bulk-import', authenticate, upload.single('file'), async (req, res
 });
 
 // Update project-contact stage
-router.put('/:projectId/project-contacts/:contactId', authenticate, async (req, res) => {
+router.put('/:projectId/project-contacts/:contactId', authenticate, requireProjectAccess, async (req, res) => {
   try {
     const { projectId, contactId } = req.params;
     const { stage, assignedTo, priority } = req.body;
@@ -6468,14 +6302,8 @@ router.put('/:projectId/project-contacts/:contactId', authenticate, async (req, 
       });
     }
 
-    // Verify project exists
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        error: 'Project not found'
-      });
-    }
+    // We already checked project via requireProjectAccess
+    const project = req.project;
 
     // Verify prospect contact exists
     const contact = await ProspectContact.findById(contactId);

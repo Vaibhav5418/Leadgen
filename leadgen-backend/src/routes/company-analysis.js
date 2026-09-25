@@ -1,7 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const Groq = require('groq-sdk');
-const Contact = require('../models/Contact');
+const authenticate = require('../middleware/auth');
+
+// Simple memory-based rate limiting
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_REQUESTS = 5;
 
 // Initialize Groq client (will be created when API key is available)
 let groq = null;
@@ -21,27 +26,24 @@ function getGroqClient() {
   return groq;
 }
 
-// Helper function to fetch website content (simplified - you may want to use a web scraping library)
-async function fetchWebsiteContent(url) {
-  try {
-    // Normalize URL
-    let normalizedUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      normalizedUrl = `https://${url}`;
-    }
-
-    // For now, we'll use OpenAI's ability to analyze websites
-    // In production, you might want to use a web scraping service like Puppeteer or Cheerio
-    // For this implementation, we'll pass the URL to ChatGPT and let it analyze
-    return normalizedUrl;
-  } catch (error) {
-    throw new Error(`Failed to fetch website: ${error.message}`);
-  }
-}
-
 // Analyze company website using ChatGPT
-router.post('/analyze', async (req, res) => {
+router.post('/analyze', authenticate, async (req, res) => {
   try {
+    // Rate Limiting
+    const userId = req.user._id.toString();
+    const now = Date.now();
+    const userLimit = rateLimitMap.get(userId) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW };
+    
+    if (now > userLimit.resetTime) {
+      userLimit.count = 1;
+      userLimit.resetTime = now + RATE_LIMIT_WINDOW;
+    } else {
+      userLimit.count++;
+      if (userLimit.count > MAX_REQUESTS) {
+        return res.status(429).json({ success: false, error: 'Too many requests. Please try again later.' });
+      }
+    }
+    rateLimitMap.set(userId, userLimit);
     console.log('=== Company Analysis Request ===');
     console.log('Request body:', req.body);
     
@@ -64,15 +66,21 @@ router.post('/analyze', async (req, res) => {
     
     console.log('Groq API key found, proceeding with analysis...');
 
-    // Normalize website URL and derive a fallback name from the host
+    // Validate Website URL (Basic SSRF / Format Protection)
     const normalizedWebsite = website.startsWith('http') ? website : `https://${website}`;
-    let derivedCompanyName = companyName;
+    let parsedUrl;
     try {
-      derivedCompanyName = derivedCompanyName || new URL(normalizedWebsite).hostname.replace(/^www\./, '');
+      parsedUrl = new URL(normalizedWebsite);
+      const host = parsedUrl.hostname.toLowerCase();
+      // Block common internal/private IP ranges or localhost
+      if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0' || host.startsWith('192.168.') || host.startsWith('10.') || host.match(/^172\.(1[6-9]|2[0-9]|3[0-1])\./)) {
+         return res.status(400).json({ success: false, error: 'Invalid or restricted website URL' });
+      }
     } catch (e) {
-      // If URL parsing fails, keep provided companyName (if any)
-      derivedCompanyName = derivedCompanyName || 'Unknown company';
+      return res.status(400).json({ success: false, error: 'Invalid website URL format' });
     }
+
+    let derivedCompanyName = companyName || parsedUrl.hostname.replace(/^www\./, '');
 
     // Create prompt for Groq model (allows user override)
     const defaultPrompt = `
@@ -89,31 +97,20 @@ Carefully review the website content including:
 
 Provide a structured analysis with the following sections:
 
-1) Company Overview
-   - What the company does
-   - Target customers or industries
-   - Geographic or market focus (if mentioned)
-   - Overall positioning in the market
-
-2) Company’s Core Offering
-   - Primary services or products
-   - Key solutions the company sells
-   - How these offerings create value for customers
-
-3) Other Important Business Information
-   - Ideal customer profile (ICP)
-   - Revenue model (inferred if not stated)
-   - Key strengths or differentiators
-   - Risks, limitations, or points to verify before doing business
-   - Any red flags or missing information on the website
+- Company Overview (What they do, target customers, market focus)
+- Company's Core Offering (Primary services, solutions, value)
+- Other Important Business Information (ICP, revenue model, differentiators, red flags)
 
 Formatting Rules:
-- Use clear headings and bullet points
-- Keep language professional and concise
-- Do NOT include marketing fluff
+- Return ONLY a valid JSON object. Do not include markdown code blocks or explanatory text.
+- The JSON object must strictly follow this exact structure:
+{
+  "companyOverview": "String describing the overview",
+  "coreOffering": "String describing the core offerings",
+  "businessConsiderations": "String describing other business information"
+}
 - Base conclusions strictly on website content and reasonable inference
-
-Return the output as a clean, readable business summary.`;
+- Keep language professional and concise`;
 
     const prompt = userPrompt?.trim()
       ? `${userPrompt.trim()}\n\nWebsite URL: ${normalizedWebsite}`
@@ -144,6 +141,7 @@ Return the output as a clean, readable business summary.`;
           content: prompt
         }
       ],
+      response_format: { type: 'json_object' },
       max_tokens: 2000,
       temperature: 0.7
     });
@@ -164,24 +162,17 @@ Return the output as a clean, readable business summary.`;
 
     const analysisText = completion.choices[0].message.content;
 
-    // Parse the analysis into structured format
-    const analysis = {
-      companyOverview: '',
-      coreOffering: '',
-      businessConsiderations: ''
-    };
-
-    // Try to parse the structured response
-    const sections = analysisText.split(/\d+\)\s+/);
-    if (sections.length > 1) {
-      analysis.companyOverview = sections[1]?.split(/2\)/)?.[0]?.trim() || '';
-      analysis.coreOffering = sections[2]?.split(/3\)/)?.[0]?.trim() || '';
-      analysis.businessConsiderations = sections[3]?.trim() || '';
-    } else {
-      // If parsing fails, use the full text
-      analysis.companyOverview = analysisText;
-      analysis.coreOffering = '';
-      analysis.businessConsiderations = '';
+    // Parse the analysis into structured format safely
+    let analysis;
+    try {
+      analysis = JSON.parse(analysisText);
+      // Validate schema
+      if (!analysis.companyOverview && !analysis.coreOffering) {
+        throw new Error('Invalid JSON schema returned');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI JSON response:', parseError);
+      return res.status(500).json({ success: false, error: 'Failed to process AI analysis properly.' });
     }
 
     res.json({
@@ -220,10 +211,9 @@ Return the output as a clean, readable business summary.`;
     } else if (error.message?.includes('insufficient_quota') || error.code === 'insufficient_quota') {
       statusCode = 429;
       errorMessage = 'Groq API quota exceeded. Please check your Groq account balance.';
-    } else if (error.message?.includes('model')) {
-      errorMessage = 'Groq model error. Please check your API configuration.';
-    } else if (error.message) {
-      errorMessage = error.message;
+    } else {
+      // Do not expose raw error messages
+      errorMessage = 'An error occurred during company analysis.';
     }
     
     res.status(statusCode).json({
@@ -234,7 +224,7 @@ Return the output as a clean, readable business summary.`;
 });
 
 // Get cached analysis for a company (if stored in database)
-router.get('/:companyName', async (req, res) => {
+router.get('/:companyName', authenticate, async (req, res) => {
   try {
     const { companyName } = req.params;
     const decodedCompanyName = decodeURIComponent(companyName);
@@ -249,7 +239,7 @@ router.get('/:companyName', async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: 'Failed to retrieve analysis.'
     });
   }
 });
