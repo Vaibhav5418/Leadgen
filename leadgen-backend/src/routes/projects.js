@@ -592,21 +592,35 @@ router.get('/analytics', authenticate, async (req, res) => {
                 $let: {
                   vars: { s: { $ifNull: ['$_derivedStageRaw', ''] } },
                   in: {
-                    $switch: {
-                      branches: [
-                        { case: { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] }, then: '$$s' },
-                        { case: { $in: ['$$s', ['Interested', 'Out of Office']] }, then: 'CIP' },
-                        { case: { $in: ['$$s', ['Bounce', 'Opt-Out']] }, then: 'Lost' },
-                        { case: { $eq: ['$$s', 'Wrong Person'] }, then: 'Lost' },
-                        { case: { $in: ['$$s', ['Details Shared', 'Existing']] }, then: 'CIP' },
-                        { case: { $eq: ['$$s', 'Demo Booked'] }, then: 'Meeting Scheduled' },
-                        { case: { $eq: ['$$s', 'Demo Completed'] }, then: 'Meeting Completed' },
-                        { case: { $eq: ['$$s', 'Future'] }, then: 'Potential Future' },
-                        { case: { $eq: ['$$s', 'Call Back'] }, then: 'CIP' },
-                        { case: { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] }, then: 'No Reply' }
-                      ],
-                      default: { $cond: [{ $ne: ['$$s', ''] }, '$$s', 'New'] }
-                    }
+                    $cond: [
+                      { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] },
+                      '$$s',
+                      { $cond: [
+                        { $in: ['$$s', ['Interested', 'Out of Office', 'Details Shared', 'Existing', 'Call Back']] },
+                        'CIP',
+                        { $cond: [
+                          { $in: ['$$s', ['Bounce', 'Opt-Out', 'Wrong Person']] },
+                          'Lost',
+                          { $cond: [
+                            { $eq: ['$$s', 'Demo Booked'] },
+                            'Meeting Scheduled',
+                            { $cond: [
+                              { $eq: ['$$s', 'Demo Completed'] },
+                              'Meeting Completed',
+                              { $cond: [
+                                { $eq: ['$$s', 'Future'] },
+                                'Potential Future',
+                                { $cond: [
+                                  { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] },
+                                  'No Reply',
+                                  { $cond: [{ $ne: ['$$s', ''] }, '$$s', 'New'] }
+                                ]}
+                              ]}
+                            ]}
+                          ]}
+                        ]}
+                      ]}
+                    ]
                   }
                 }
               }

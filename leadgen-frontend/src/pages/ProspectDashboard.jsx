@@ -68,6 +68,8 @@ const getActivityDate = (activity) => {
   return new Date(activity.createdAt);
 };
 
+import KPICard from '../components/dashboards/KPICard';
+
 export default function ProspectDashboard() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1555,84 +1557,74 @@ export default function ProspectDashboard() {
               {/* LinkedIn KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Connection Requests Sent */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-purple-700"
+  badgeText="LinkedIn"
+  value={connectionSent.toLocaleString()}
+  subtext="Connection Requests Sent"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                      LinkedIn
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{connectionSent.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Connection Requests Sent</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Acceptance Rate */}
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Rate"
+  value={acceptanceRate.toFixed(1)}%}
+  subtext="{accepted.toLocaleString()} accepted"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                      Rate
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{acceptanceRate.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-600 mt-1">{accepted.toLocaleString()} accepted</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Messages Sent */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Messages"
+  value={followups.toLocaleString()}
+  subtext="Messages Sent"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                      Messages
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{followups.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Messages Sent</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Reply Rate */}
-                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl border border-cyan-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-cyan-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-cyan-50 to-blue-50"
+  borderColorClass="border-cyan-100"
+  iconColorClass="text-cyan-600"
+  badgeColorClass="text-cyan-700"
+  badgeText="Rate"
+  value={replyRate.toFixed(1)}%}
+  subtext="{followups.toLocaleString()} replies"
+  iconSvg={<svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-cyan-700 bg-white/70 border border-cyan-100 px-2 py-1 rounded-full shadow-xs">
-                      Rate
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{replyRate.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-600 mt-1">{followups.toLocaleString()} replies</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Meetings Booked */}
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-amber-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-amber-50 to-yellow-50"
+  borderColorClass="border-amber-100"
+  iconColorClass="text-amber-600"
+  badgeColorClass="text-amber-700"
+  badgeText="Meetings"
+  value={(scheduled + completed).toLocaleString()}
+  subtext="Meetings Booked"
+  iconSvg={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-amber-700 bg-white/70 border border-amber-100 px-2 py-1 rounded-full shadow-xs">
-                      Meetings
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{(scheduled + completed).toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Meetings Booked</div>
-                </div>
+                      </svg>}
+/>
               </div>
 
               {/* Charts */}
@@ -1803,84 +1795,74 @@ export default function ProspectDashboard() {
               {/* Call KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Calls Made */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="Calls"
+  value={callsMade.toLocaleString()}
+  subtext="Calls Made"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-                      Calls
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{callsMade.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Calls Made</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Connect Rate */}
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Rate"
+  value={connectRate.toFixed(1)}%}
+  subtext="{callsConnected.toLocaleString()} connected"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                      Rate
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{connectRate.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-600 mt-1">{callsConnected.toLocaleString()} connected</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Decision Maker Connects */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Decision"
+  value={decisionMaker.toLocaleString()}
+  subtext="Decision Maker Connects"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                      Decision
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{decisionMaker.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Decision Maker Connects</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Interested */}
-                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl border border-cyan-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-cyan-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-cyan-50 to-blue-50"
+  borderColorClass="border-cyan-100"
+  iconColorClass="text-cyan-600"
+  badgeColorClass="text-cyan-700"
+  badgeText="Interested"
+  value={interested.toLocaleString()}
+  subtext="Interested"
+  iconSvg={<svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-cyan-700 bg-white/70 border border-cyan-100 px-2 py-1 rounded-full shadow-xs">
-                      Interested
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{interested.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Interested</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Meetings Booked */}
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-amber-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-amber-50 to-yellow-50"
+  borderColorClass="border-amber-100"
+  iconColorClass="text-amber-600"
+  badgeColorClass="text-amber-700"
+  badgeText="Meetings"
+  value={meetings.toLocaleString()}
+  subtext="Meetings Booked"
+  iconSvg={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-amber-700 bg-white/70 border border-amber-100 px-2 py-1 rounded-full shadow-xs">
-                      Meetings
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{meetings.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Meetings Booked</div>
-                </div>
+                      </svg>}
+/>
               </div>
 
               {/* Charts */}
@@ -2025,85 +2007,75 @@ export default function ProspectDashboard() {
               {/* Email KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 {/* Emails Sent */}
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="Email"
+  value={emailsSent.toLocaleString()}
+  subtext="Emails Sent"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-                      Email
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{emailsSent.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Emails Sent</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Open Rate */}
-                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Rate"
+  value={openRate.toFixed(1)}%}
+  subtext="{accepted.toLocaleString()} opened"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                      Rate
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{openRate.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-600 mt-1">{accepted.toLocaleString()} opened</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Reply Rate */}
-                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Rate"
+  value={replyRate.toFixed(1)}%}
+  subtext="{sql.toLocaleString()} replies"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                      Rate
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{replyRate.toFixed(1)}%</div>
-                  <div className="text-sm text-gray-600 mt-1">{sql.toLocaleString()} replies</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Meetings Booked */}
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-amber-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-amber-50 to-yellow-50"
+  borderColorClass="border-amber-100"
+  iconColorClass="text-amber-600"
+  badgeColorClass="text-amber-700"
+  badgeText="Meetings"
+  value={meetings.toLocaleString()}
+  subtext="Meetings Booked"
+  iconSvg={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-amber-700 bg-white/70 border border-amber-100 px-2 py-1 rounded-full shadow-xs">
-                      Meetings
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">{meetings.toLocaleString()}</div>
-                  <div className="text-sm text-gray-600 mt-1">Meetings Booked</div>
-                </div>
+                      </svg>}
+/>
 
                 {/* Bounce Rate */}
-                <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-xl border border-red-100 shadow-sm p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-white/80 border border-red-100 flex items-center justify-center shadow-xs">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <KPICard
+  gradientClass="from-red-50 to-pink-50"
+  borderColorClass="border-red-100"
+  iconColorClass="text-red-600"
+  badgeColorClass="text-red-700"
+  badgeText="Bounce"
+  value={0.0%}
+  subtext="Bounce Rate"
+  iconSvg={<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-semibold text-red-700 bg-white/70 border border-red-100 px-2 py-1 rounded-full shadow-xs">
-                      Bounce
-                    </span>
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 leading-tight">0.0%</div>
-                  <div className="text-sm text-gray-600 mt-1">Bounce Rate</div>
-                </div>
+                      </svg>}
+/>
               </div>
 
               {/* Charts */}

@@ -35,6 +35,8 @@ let cachedMasterDashboard = null;
 let cachedMasterDashboardTimestamp = 0;
 const MASTER_DASHBOARD_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
+import KPICard from '../components/dashboards/KPICard';
+
 export default function MasterDashboard() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,44 @@ export default function MasterDashboard() {
 
     load();
 
-    return () => {
+    
+  const commonFunnelChartOptions = {
+    responsive: true,
+    maintainAspectRatio: true,
+    aspectRatio: 2,
+    layout: {
+      padding: { top: 10, bottom: 10 }
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) ? context.parsed.y : 0;
+            return `${context.label}: ${value.toLocaleString()}`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => {
+            const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+            return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
+          },
+          stepSize: 1
+        }
+      },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } }
+      }
+    }
+  };
+
+  return () => {
       isMountedRef.current = false;
     };
   }, []);
@@ -514,132 +553,116 @@ export default function MasterDashboard() {
             {/* Executive Tiles */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Active Projects */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="Projects"
+  value={executive?.activeProjects || 0}
+  subtext="Active Projects"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-                    Projects
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{executive?.activeProjects || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Active Projects</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Total Leads in Play */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Leads"
+  value={(executive?.totalLeadsInPlay || 0).toLocaleString()}
+  subtext="Total Leads in Play"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                    Leads
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{(executive?.totalLeadsInPlay || 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-600 mt-1">Total Leads in Play</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Touches This Week */}
-              <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-green-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-green-50 to-emerald-50"
+  borderColorClass="border-green-100"
+  iconColorClass="text-green-600"
+  badgeColorClass="text-green-700"
+  badgeText="Activity"
+  value={(executive?.totalTouchesThisWeek || 0).toLocaleString()}
+  subtext="Touches This Week"
+  iconSvg={<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-green-700 bg-white/70 border border-green-100 px-2 py-1 rounded-full shadow-xs">
-                    Activity
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{(executive?.totalTouchesThisWeek || 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-600 mt-1">Touches This Week</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Meetings This Week */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Meetings"
+  value={executive?.totalMeetingsBookedThisWeek || 0}
+  subtext="Meetings This Week"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                    Meetings
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{executive?.totalMeetingsBookedThisWeek || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Meetings This Week</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Touches This Month */}
-              <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl border border-indigo-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-indigo-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-indigo-50 to-blue-50"
+  borderColorClass="border-indigo-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-indigo-700"
+  badgeText="Activity"
+  value={(executive?.totalTouchesThisMonth || 0).toLocaleString()}
+  subtext="Touches This Month"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-indigo-700 bg-white/70 border border-indigo-100 px-2 py-1 rounded-full shadow-xs">
-                    Activity
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{(executive?.totalTouchesThisMonth || 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-600 mt-1">Touches This Month</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Meetings This Month */}
-              <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-xl border border-rose-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-rose-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-rose-50 to-pink-50"
+  borderColorClass="border-rose-100"
+  iconColorClass="text-rose-600"
+  badgeColorClass="text-rose-700"
+  badgeText="Meetings"
+  value={executive?.totalMeetingsBookedThisMonth || 0}
+  subtext="Meetings This Month"
+  iconSvg={<svg className="w-6 h-6 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-rose-700 bg-white/70 border border-rose-100 px-2 py-1 rounded-full shadow-xs">
-                    Meetings
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{executive?.totalMeetingsBookedThisMonth || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Meetings This Month</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Weighted Conversion Rate */}
-              <div className="bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl border border-teal-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-teal-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-teal-50 to-cyan-50"
+  borderColorClass="border-teal-100"
+  iconColorClass="text-teal-600"
+  badgeColorClass="text-teal-700"
+  badgeText="Conversion"
+  value={clampPercentage(executive?.weightedConversionRate || 0).toFixed(1)}%}
+  subtext="Weighted Conversion Rate"
+  iconSvg={<svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-teal-700 bg-white/70 border border-teal-100 px-2 py-1 rounded-full shadow-xs">
-                    Conversion
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(executive?.weightedConversionRate || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">Weighted Conversion Rate</div>
-              </div>
+                    </svg>}
+/>
 
               {/* SLA Compliance */}
-              <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl border border-orange-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-orange-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-orange-50 to-amber-50"
+  borderColorClass="border-orange-100"
+  iconColorClass="text-orange-600"
+  badgeColorClass="text-orange-700"
+  badgeText="Compliance"
+  value={clampPercentage(executive?.slaCompliance || 0).toFixed(1)}%}
+  subtext="SLA Compliance"
+  iconSvg={<svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-orange-700 bg-white/70 border border-orange-100 px-2 py-1 rounded-full shadow-xs">
-                    Compliance
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(executive?.slaCompliance || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">SLA Compliance</div>
-              </div>
+                    </svg>}
+/>
             </div>
 
             {/* Charts Section */}
@@ -757,54 +780,7 @@ export default function MasterDashboard() {
                   <div className="h-64">
                     <Bar
                       data={overallFunnelData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 2,
-                        layout: {
-                          padding: {
-                            top: 10,
-                            bottom: 10
-                          }
-                        },
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
-                                  ? context.parsed.y 
-                                  : 0;
-                                return `${context.label}: ${value.toLocaleString()}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
-                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
-                              },
-                              stepSize: 1
-                            }
-                          },
-                          x: {
-                            grid: {
-                              display: false
-                            },
-                            ticks: {
-                              maxRotation: 45,
-                              minRotation: 45,
-                              font: {
-                                size: 10
-                              }
-                            }
-                          }
-                        }
-                      }}
+                      options={commonFunnelChartOptions}
                     />
                   </div>
                 </Suspense>
@@ -1142,100 +1118,88 @@ export default function MasterDashboard() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {/* Leads Added Daily */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="Daily"
+  value={dataQuality?.leadsAddedDaily || 0}
+  subtext="Leads Added (Daily)"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-                    Daily
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{dataQuality?.leadsAddedDaily || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Leads Added (Daily)</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Leads Added Weekly */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Weekly"
+  value={dataQuality?.leadsAddedWeekly || 0}
+  subtext="Leads Added (Weekly)"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                    Weekly
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{dataQuality?.leadsAddedWeekly || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Leads Added (Weekly)</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Valid Email % */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Quality"
+  value={clampPercentage(dataQuality?.validEmailPercent || 0).toFixed(1)}%}
+  subtext="{(dataQuality?.validEmailCount || 0).toLocaleString()} of {(dataQuality?.totalProspects || 0).toLocaleString()}"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                    Quality
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(dataQuality?.validEmailPercent || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">{(dataQuality?.validEmailCount || 0).toLocaleString()} of {(dataQuality?.totalProspects || 0).toLocaleString()}</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Valid Phone % */}
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl border border-cyan-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-cyan-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-cyan-50 to-blue-50"
+  borderColorClass="border-cyan-100"
+  iconColorClass="text-cyan-600"
+  badgeColorClass="text-cyan-700"
+  badgeText="Quality"
+  value={clampPercentage(dataQuality?.validPhonePercent || 0).toFixed(1)}%}
+  subtext="{(dataQuality?.validPhoneCount || 0).toLocaleString()} of {(dataQuality?.totalProspects || 0).toLocaleString()}"
+  iconSvg={<svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-cyan-700 bg-white/70 border border-cyan-100 px-2 py-1 rounded-full shadow-xs">
-                    Quality
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(dataQuality?.validPhonePercent || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">{(dataQuality?.validPhoneCount || 0).toLocaleString()} of {(dataQuality?.totalProspects || 0).toLocaleString()}</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Duplicate % */}
-              <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl border border-red-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-red-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-red-50 to-orange-50"
+  borderColorClass="border-red-100"
+  iconColorClass="text-red-600"
+  badgeColorClass="text-red-700"
+  badgeText="Duplicates"
+  value={clampPercentage(dataQuality?.duplicatePercent || 0).toFixed(1)}%}
+  subtext="{(dataQuality?.duplicateCount || 0).toLocaleString()} duplicates"
+  iconSvg={<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-red-700 bg-white/70 border border-red-100 px-2 py-1 rounded-full shadow-xs">
-                    Duplicates
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(dataQuality?.duplicatePercent || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">{(dataQuality?.duplicateCount || 0).toLocaleString()} duplicates</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Data Quality Score */}
-              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-amber-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-amber-50 to-yellow-50"
+  borderColorClass="border-amber-100"
+  iconColorClass="text-amber-600"
+  badgeColorClass="text-amber-700"
+  badgeText="Score"
+  value={clampPercentage(dataQuality?.dataQualityScore || 0).toFixed(1)}%}
+  subtext="Data Quality Score"
+  iconSvg={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-amber-700 bg-white/70 border border-amber-100 px-2 py-1 rounded-full shadow-xs">
-                    Score
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(dataQuality?.dataQualityScore || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">Data Quality Score</div>
-              </div>
+                    </svg>}
+/>
             </div>
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-6">Data Quality Overview</h3>
@@ -1292,84 +1256,74 @@ export default function MasterDashboard() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {/* Connection Requests Sent */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="LinkedIn"
+  value={(linkedin?.connectionRequestsSent || 0).toLocaleString()}
+  subtext="Connection Requests Sent"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-                    LinkedIn
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{(linkedin?.connectionRequestsSent || 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-600 mt-1">Connection Requests Sent</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Acceptance Rate */}
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Rate"
+  value={clampPercentage(linkedin?.acceptanceRate || 0).toFixed(1)}%}
+  subtext="{(linkedin?.accepted || 0).toLocaleString()} accepted"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-                    Rate
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(linkedin?.acceptanceRate || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">{(linkedin?.accepted || 0).toLocaleString()} accepted</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Messages Sent */}
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Messages"
+  value={(linkedin?.messagesSent || 0).toLocaleString()}
+  subtext="Messages Sent"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-                    Messages
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{(linkedin?.messagesSent || 0).toLocaleString()}</div>
-                <div className="text-sm text-gray-600 mt-1">Messages Sent</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Reply Rate */}
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-xl border border-cyan-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-cyan-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-cyan-50 to-blue-50"
+  borderColorClass="border-cyan-100"
+  iconColorClass="text-cyan-600"
+  badgeColorClass="text-cyan-700"
+  badgeText="Rate"
+  value={clampPercentage(linkedin?.replyRate || 0).toFixed(1)}%}
+  subtext="{(linkedin?.replies || 0).toLocaleString()} replies"
+  iconSvg={<svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-cyan-700 bg-white/70 border border-cyan-100 px-2 py-1 rounded-full shadow-xs">
-                    Rate
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{clampPercentage(linkedin?.replyRate || 0).toFixed(1)}%</div>
-                <div className="text-sm text-gray-600 mt-1">{(linkedin?.replies || 0).toLocaleString()} replies</div>
-              </div>
+                    </svg>}
+/>
 
               {/* Meetings Booked */}
-              <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border border-amber-100 shadow-sm p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="w-12 h-12 rounded-lg bg-white/80 border border-amber-100 flex items-center justify-center shadow-xs">
-                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <KPICard
+  gradientClass="from-amber-50 to-yellow-50"
+  borderColorClass="border-amber-100"
+  iconColorClass="text-amber-600"
+  badgeColorClass="text-amber-700"
+  badgeText="Meetings"
+  value={linkedin?.meetingsBooked || 0}
+  subtext="Meetings Booked"
+  iconSvg={<svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <span className="text-xs font-semibold text-amber-700 bg-white/70 border border-amber-100 px-2 py-1 rounded-full shadow-xs">
-                    Meetings
-                  </span>
-                </div>
-                <div className="text-3xl font-bold text-gray-900 leading-tight">{linkedin?.meetingsBooked || 0}</div>
-                <div className="text-sm text-gray-600 mt-1">Meetings Booked</div>
-              </div>
+                    </svg>}
+/>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1380,54 +1334,7 @@ export default function MasterDashboard() {
                   <div className="h-64">
                     <Bar
                       data={linkedinFunnelData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 2,
-                        layout: {
-                          padding: {
-                            top: 10,
-                            bottom: 10
-                          }
-                        },
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
-                                  ? context.parsed.y 
-                                  : 0;
-                                return `${context.label}: ${value.toLocaleString()}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
-                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
-                              },
-                              stepSize: 1
-                            }
-                          },
-                          x: {
-                            grid: {
-                              display: false
-                            },
-                            ticks: {
-                              maxRotation: 45,
-                              minRotation: 45,
-                              font: {
-                                size: 10
-                              }
-                            }
-                          }
-                        }
-                      }}
+                      options={commonFunnelChartOptions}
                     />
                   </div>
                 </Suspense>
@@ -1513,54 +1420,7 @@ export default function MasterDashboard() {
                   <div className="h-64">
                     <Bar
                       data={coldCallFunnelData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 2,
-                        layout: {
-                          padding: {
-                            top: 10,
-                            bottom: 10
-                          }
-                        },
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
-                                  ? context.parsed.y 
-                                  : 0;
-                                return `${context.label}: ${value.toLocaleString()}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
-                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
-                              },
-                              stepSize: 1
-                            }
-                          },
-                          x: {
-                            grid: {
-                              display: false
-                            },
-                            ticks: {
-                              maxRotation: 45,
-                              minRotation: 45,
-                              font: {
-                                size: 10
-                              }
-                            }
-                          }
-                        }
-                      }}
+                      options={commonFunnelChartOptions}
                     />
                   </div>
                 </Suspense>
@@ -1659,54 +1519,7 @@ export default function MasterDashboard() {
                   <div className="h-64">
                     <Bar
                       data={emailFunnelData}
-                      options={{
-                        responsive: true,
-                        maintainAspectRatio: true,
-                        aspectRatio: 2,
-                        layout: {
-                          padding: {
-                            top: 10,
-                            bottom: 10
-                          }
-                        },
-                        plugins: {
-                          legend: { display: false },
-                          tooltip: {
-                            callbacks: {
-                              label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
-                                  ? context.parsed.y 
-                                  : 0;
-                                return `${context.label}: ${value.toLocaleString()}`;
-                              }
-                            }
-                          }
-                        },
-                        scales: {
-                          y: {
-                            beginAtZero: true,
-                            ticks: {
-                              callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
-                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
-                              },
-                              stepSize: 1
-                            }
-                          },
-                          x: {
-                            grid: {
-                              display: false
-                            },
-                            ticks: {
-                              maxRotation: 45,
-                              minRotation: 45,
-                              font: {
-                                size: 10
-                              }
-                            }
-                          }
-                        }
-                      }}
+                      options={commonFunnelChartOptions}
                     />
                   </div>
                 </Suspense>

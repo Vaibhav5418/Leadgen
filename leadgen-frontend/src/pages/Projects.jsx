@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 
+import KPICard from '../components/dashboards/KPICard';
+
 export default function Projects() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -208,68 +210,60 @@ export default function Projects() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Projects */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-lg bg-white/80 border border-blue-100 flex items-center justify-center shadow-xs">
-              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <KPICard
+  gradientClass="from-blue-50 to-indigo-50"
+  borderColorClass="border-blue-100"
+  iconColorClass="text-indigo-600"
+  badgeColorClass="text-blue-700"
+  badgeText="Portfolio Size"
+  value={stats.total}
+  subtext="Total Projects"
+  iconSvg={<svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <span className="text-xs font-semibold text-blue-700 bg-white/70 border border-blue-100 px-2 py-1 rounded-full shadow-xs">
-              Portfolio Size
-            </span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 leading-tight">{stats.total}</div>
-          <div className="text-sm text-gray-600 mt-1">Total Projects</div>
-        </div>
+              </svg>}
+/>
 
         {/* Total Prospects */}
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border border-purple-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-lg bg-white/80 border border-purple-100 flex items-center justify-center shadow-xs">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <KPICard
+  gradientClass="from-purple-50 to-indigo-50"
+  borderColorClass="border-purple-100"
+  iconColorClass="text-purple-600"
+  badgeColorClass="text-purple-700"
+  badgeText="Prospects"
+  value={stats.totalProspects.toLocaleString()}
+  subtext="Total Prospects"
+  iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            </div>
-            <span className="text-xs font-semibold text-purple-700 bg-white/70 border border-purple-100 px-2 py-1 rounded-full shadow-xs">
-              Prospects
-            </span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 leading-tight">{stats.totalProspects.toLocaleString()}</div>
-          <div className="text-sm text-gray-600 mt-1">Total Prospects</div>
-        </div>
+              </svg>}
+/>
 
         {/* Total Activities */}
-        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-lg bg-white/80 border border-green-100 flex items-center justify-center shadow-xs">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <KPICard
+  gradientClass="from-green-50 to-emerald-50"
+  borderColorClass="border-green-100"
+  iconColorClass="text-green-600"
+  badgeColorClass="text-green-700"
+  badgeText="Activities"
+  value={stats.totalActivities.toLocaleString()}
+  subtext="Total Activities"
+  iconSvg={<svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            </div>
-            <span className="text-xs font-semibold text-green-700 bg-white/70 border border-green-100 px-2 py-1 rounded-full shadow-xs">
-              Activities
-            </span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 leading-tight">{stats.totalActivities.toLocaleString()}</div>
-          <div className="text-sm text-gray-600 mt-1">Total Activities</div>
-        </div>
+              </svg>}
+/>
 
         {/* Active Projects */}
-        <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100 shadow-sm p-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 rounded-lg bg-white/80 border border-emerald-100 flex items-center justify-center shadow-xs">
-              <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <KPICard
+  gradientClass="from-emerald-50 to-teal-50"
+  borderColorClass="border-emerald-100"
+  iconColorClass="text-emerald-600"
+  badgeColorClass="text-emerald-700"
+  badgeText="Projects"
+  value={stats.activeProjects}
+  subtext="Active Projects"
+  iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <span className="text-xs font-semibold text-emerald-700 bg-white/70 border border-emerald-100 px-2 py-1 rounded-full shadow-xs">
-              Projects
-            </span>
-          </div>
-          <div className="text-3xl font-bold text-gray-900 leading-tight">{stats.activeProjects}</div>
-          <div className="text-sm text-gray-600 mt-1">Active Projects</div>
-        </div>
+              </svg>}
+/>
       </div>
 
       {/* Search and Projects Dropdown Section */}
