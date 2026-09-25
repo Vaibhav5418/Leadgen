@@ -1083,10 +1083,17 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       userProjectFilter.createdBy = user._id;
     }
     
-    if (projectId && mongoose.Types.ObjectId.isValid(projectId)) {
+    if (projectId) {
+      if (!mongoose.Types.ObjectId.isValid(projectId)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid project ID format'
+        });
+      }
+      const projectObjectId = new mongoose.Types.ObjectId(projectId);
       // Verify user has access to this project
       if (!isAdmin) {
-        const project = await Project.findOne({ _id: projectId, createdBy: user._id });
+        const project = await Project.findOne({ _id: projectObjectId, createdBy: user._id });
         if (!project) {
           return res.status(403).json({
             success: false,
@@ -1094,8 +1101,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
           });
         }
       }
-      projectFilter = { projectId: new mongoose.Types.ObjectId(projectId) };
-      projectIds = [new mongoose.Types.ObjectId(projectId)];
+      projectFilter = { projectId: projectObjectId };
+      projectIds = [projectObjectId];
     } else {
       const projects = await Project.find(userProjectFilter).lean();
       projectIds = projects.map(p => p._id);
@@ -3305,12 +3312,15 @@ router.get('/', authenticate, async (req, res) => {
 
     // Build search conditions
     let searchConditions = [];
-    if (search) {
-      searchConditions.push(
-        { companyName: { $regex: search, $options: 'i' } },
-        { 'contactPerson.fullName': { $regex: search, $options: 'i' } },
-        { 'contactPerson.email': { $regex: search, $options: 'i' } }
-      );
+    if (search && typeof search === 'string') {
+      const sanitizedSearch = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      if (sanitizedSearch) {
+        searchConditions.push(
+          { companyName: { $regex: sanitizedSearch, $options: 'i' } },
+          { 'contactPerson.fullName': { $regex: sanitizedSearch, $options: 'i' } },
+          { 'contactPerson.email': { $regex: sanitizedSearch, $options: 'i' } }
+        );
+      }
     }
 
     // Combine filters properly
@@ -3329,8 +3339,8 @@ router.get('/', authenticate, async (req, res) => {
     }
     // If both are empty (admin with no search), filter remains {} which matches all
 
-    if (status) {
-      filter.status = status;
+    if (status && typeof status === 'string') {
+      filter.status = status.trim();
     }
 
     // Debug: Log filter for admins to verify

@@ -1,4 +1,5 @@
 const Groq = require('groq-sdk');
+const mongoose = require('mongoose');
 const ProspectContact = require('../models/ProspectContact');
 const Contact = require('../models/Contact');
 const Activity = require('../models/Activity');
@@ -27,11 +28,21 @@ function getGroqClient() {
  */
 async function gatherContactData(contactId, projectId) {
   try {
+    if (contactId && !mongoose.Types.ObjectId.isValid(contactId)) {
+      throw new Error('Invalid contact ID format');
+    }
+    if (projectId && !mongoose.Types.ObjectId.isValid(projectId)) {
+      throw new Error('Invalid project ID format');
+    }
+
+    const contactObjectId = contactId ? new mongoose.Types.ObjectId(contactId) : null;
+    const projectObjectId = projectId ? new mongoose.Types.ObjectId(projectId) : null;
+
     // If we have both, verify the contact actually belongs to the project!
-    if (contactId && projectId) {
+    if (contactObjectId && projectObjectId) {
       const isLinked = await ProjectContact.exists({
-        projectId: projectId,
-        contactId: contactId
+        projectId: projectObjectId,
+        contactId: contactObjectId
       });
       if (!isLinked) {
         throw new Error('Contact does not belong to the specified project');
@@ -39,9 +50,9 @@ async function gatherContactData(contactId, projectId) {
     }
 
     // Try ProspectContact first, then Contact
-    let contact = await ProspectContact.findById(contactId).lean();
+    let contact = await ProspectContact.findById(contactObjectId).lean();
     if (!contact) {
-      contact = await Contact.findById(contactId).lean();
+      contact = await Contact.findById(contactObjectId).lean();
     }
 
     if (!contact) {
@@ -50,16 +61,16 @@ async function gatherContactData(contactId, projectId) {
 
     // Get project data if projectId is provided
     let project = null;
-    if (projectId) {
-      project = await Project.findById(projectId).lean();
+    if (projectObjectId) {
+      project = await Project.findById(projectObjectId).lean();
     }
 
     // Get previous activities for this contact
     let previousActivities = [];
-    if (contactId && projectId) {
+    if (contactObjectId && projectObjectId) {
       previousActivities = await Activity.find({
-        contactId: contactId,
-        projectId: projectId,
+        contactId: contactObjectId,
+        projectId: projectObjectId,
         type: { $in: ['email', 'call', 'linkedin'] }
       })
         .sort({ createdAt: -1 })

@@ -47,6 +47,17 @@ router.post('/', authenticate, requireProjectAccess, async (req, res) => {
       });
     }
 
+    if (projectId && !mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(400).json({ success: false, error: 'Invalid project ID format' });
+    }
+    if (contactId && !mongoose.Types.ObjectId.isValid(contactId)) {
+      return res.status(400).json({ success: false, error: 'Invalid contact ID format' });
+    }
+
+    const projectObjectId = projectId ? new mongoose.Types.ObjectId(projectId) : null;
+    const contactObjectId = contactId ? new mongoose.Types.ObjectId(contactId) : null;
+    const safeStatus = (typeof status === 'string' && status.trim()) ? status.trim() : null;
+
     const project = req.project;
 
     // Status is now optional for all activity types (Email, LinkedIn, and Call)
@@ -106,28 +117,28 @@ router.post('/', authenticate, requireProjectAccess, async (req, res) => {
 
     // Update ProjectContact stage based on the most recent activity status
     // Create ProjectContact entry if it doesn't exist to prevent duplicates
-    if (contactId && projectId) {
+    if (contactObjectId && projectObjectId) {
       try {
         // Check if ProjectContact entry exists
         const existingProjectContact = await ProjectContact.findOne({
-          projectId: projectId,
-          contactId: contactId
+          projectId: projectObjectId,
+          contactId: contactObjectId
         });
 
         // If the current activity has a status, use it to update the stage
-        if (status) {
+        if (safeStatus) {
           if (existingProjectContact) {
             // Update existing entry
             await ProjectContact.findOneAndUpdate(
-              { projectId: projectId, contactId: contactId },
-              { stage: status }
+              { projectId: projectObjectId, contactId: contactObjectId },
+              { stage: safeStatus }
             );
           } else {
             // Create new ProjectContact entry
             await ProjectContact.create({
-              projectId: projectId,
-              contactId: contactId,
-              stage: status,
+              projectId: projectObjectId,
+              contactId: contactObjectId,
+              stage: safeStatus,
               assignedTo: '',
               priority: 'Medium'
             });
@@ -135,8 +146,8 @@ router.post('/', authenticate, requireProjectAccess, async (req, res) => {
         } else {
           // If current activity doesn't have a status, find the most recent activity with a status
           const mostRecentActivity = await Activity.findOne({
-            contactId: contactId,
-            projectId: projectId,
+            contactId: contactObjectId,
+            projectId: projectObjectId,
             status: { $exists: true, $ne: null }
           })
             .sort({ createdAt: -1 })
@@ -146,13 +157,13 @@ router.post('/', authenticate, requireProjectAccess, async (req, res) => {
             // Update existing entry
             if (mostRecentActivity && mostRecentActivity.status) {
               await ProjectContact.findOneAndUpdate(
-                { projectId: projectId, contactId: contactId },
+                { projectId: projectObjectId, contactId: contactObjectId },
                 { stage: mostRecentActivity.status }
               );
             } else {
               // If no activity with status exists, set stage to 'New'
               await ProjectContact.findOneAndUpdate(
-                { projectId: projectId, contactId: contactId },
+                { projectId: projectObjectId, contactId: contactObjectId },
                 { stage: 'New' }
               );
             }
@@ -160,8 +171,8 @@ router.post('/', authenticate, requireProjectAccess, async (req, res) => {
             // Create new ProjectContact entry
             const stageToSet = (mostRecentActivity && mostRecentActivity.status) ? mostRecentActivity.status : 'New';
             await ProjectContact.create({
-              projectId: projectId,
-              contactId: contactId,
+              projectId: projectObjectId,
+              contactId: contactObjectId,
               stage: stageToSet,
               assignedTo: '',
               priority: 'Medium'
@@ -447,7 +458,7 @@ router.get('/team-performance', authenticate, async (req, res) => {
     if (projectId && mongoose.Types.ObjectId.isValid(projectId)) {
       if (!isAdmin) {
         const project = await Project.findOne({
-          _id: projectId,
+          _id: new mongoose.Types.ObjectId(projectId),
           $or: [
             { createdBy: user._id },
             { teamMembers: { $in: [user.email.toLowerCase()] } }

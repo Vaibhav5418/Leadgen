@@ -48,6 +48,9 @@ app.use(cors({
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
+const mongoSanitize = require('express-mongo-sanitize');
+app.use(mongoSanitize());
+
 // Lightweight health check endpoint (for Render uptime pings)
 // Returns immediately without checking database
 app.get('/health', (req, res) => {
