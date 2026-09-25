@@ -23,7 +23,7 @@ const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB limit
     fieldSize: 1 * 1024 * 1024 // 1MB non-file field limit
   },
   fileFilter: (req, file, cb) => {
@@ -594,16 +594,16 @@ router.get('/analytics', authenticate, async (req, res) => {
                   in: {
                     $switch: {
                       branches: [
-                        { case: { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] }, ['then']: '$$s' },
-                        { case: { $in: ['$$s', ['Interested', 'Out of Office']] }, ['then']: 'CIP' },
-                        { case: { $in: ['$$s', ['Bounce', 'Opt-Out']] }, ['then']: 'Lost' },
-                        { case: { $eq: ['$$s', 'Wrong Person'] }, ['then']: 'Lost' },
-                        { case: { $in: ['$$s', ['Details Shared', 'Existing']] }, ['then']: 'CIP' },
-                        { case: { $eq: ['$$s', 'Demo Booked'] }, ['then']: 'Meeting Scheduled' },
-                        { case: { $eq: ['$$s', 'Demo Completed'] }, ['then']: 'Meeting Completed' },
-                        { case: { $eq: ['$$s', 'Future'] }, ['then']: 'Potential Future' },
-                        { case: { $eq: ['$$s', 'Call Back'] }, ['then']: 'CIP' },
-                        { case: { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] }, ['then']: 'No Reply' }
+                        { case: { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] }, then: '$$s' },
+                        { case: { $in: ['$$s', ['Interested', 'Out of Office']] }, then: 'CIP' },
+                        { case: { $in: ['$$s', ['Bounce', 'Opt-Out']] }, then: 'Lost' },
+                        { case: { $eq: ['$$s', 'Wrong Person'] }, then: 'Lost' },
+                        { case: { $in: ['$$s', ['Details Shared', 'Existing']] }, then: 'CIP' },
+                        { case: { $eq: ['$$s', 'Demo Booked'] }, then: 'Meeting Scheduled' },
+                        { case: { $eq: ['$$s', 'Demo Completed'] }, then: 'Meeting Completed' },
+                        { case: { $eq: ['$$s', 'Future'] }, then: 'Potential Future' },
+                        { case: { $eq: ['$$s', 'Call Back'] }, then: 'CIP' },
+                        { case: { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] }, then: 'No Reply' }
                       ],
                       default: { $cond: [{ $ne: ['$$s', ''] }, '$$s', 'New'] }
                     }

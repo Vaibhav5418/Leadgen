@@ -1650,6 +1650,7 @@ export default function AdminPanel() {
                     : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
               >
+                <span className="sr-only">Administrator role</span>
                 <input
                   id="role-admin"
                   type="radio"
@@ -1681,6 +1682,7 @@ export default function AdminPanel() {
                     : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
               >
+                <span className="sr-only">Employee role</span>
                 <input
                   id="role-employee"
                   type="radio"
