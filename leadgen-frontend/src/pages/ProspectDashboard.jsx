@@ -1577,7 +1577,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-emerald-600"
   badgeColorClass="text-emerald-700"
   badgeText="Rate"
-  value={acceptanceRate.toFixed(1)}%}
+  value={`${acceptanceRate.toFixed(1)}%`}
   subtext="{accepted.toLocaleString()} accepted"
   iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1605,7 +1605,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-cyan-600"
   badgeColorClass="text-cyan-700"
   badgeText="Rate"
-  value={replyRate.toFixed(1)}%}
+  value={`${replyRate.toFixed(1)}%`}
   subtext="{followups.toLocaleString()} replies"
   iconSvg={<svg className="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -1815,7 +1815,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-emerald-600"
   badgeColorClass="text-emerald-700"
   badgeText="Rate"
-  value={connectRate.toFixed(1)}%}
+  value={`${connectRate.toFixed(1)}%`}
   subtext="{callsConnected.toLocaleString()} connected"
   iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2027,7 +2027,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-emerald-600"
   badgeColorClass="text-emerald-700"
   badgeText="Rate"
-  value={openRate.toFixed(1)}%}
+  value={`${openRate.toFixed(1)}%`}
   subtext="{accepted.toLocaleString()} opened"
   iconSvg={<svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2042,7 +2042,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-purple-600"
   badgeColorClass="text-purple-700"
   badgeText="Rate"
-  value={replyRate.toFixed(1)}%}
+  value={`${replyRate.toFixed(1)}%`}
   subtext="{sql.toLocaleString()} replies"
   iconSvg={<svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -2070,7 +2070,7 @@ export default function ProspectDashboard() {
   iconColorClass="text-red-600"
   badgeColorClass="text-red-700"
   badgeText="Bounce"
-  value={0.0%}
+  value={`0.0%`}
   subtext="Bounce Rate"
   iconSvg={<svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

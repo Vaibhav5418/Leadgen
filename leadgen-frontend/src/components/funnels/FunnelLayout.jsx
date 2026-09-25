@@ -1,5 +1,5 @@
 import React from 'react';
-import FunnelStageCard from '../components/FunnelStageCard';
+import FunnelStageCard from '../FunnelStageCard';
 
 export default function FunnelLayout({ 
   loading, 

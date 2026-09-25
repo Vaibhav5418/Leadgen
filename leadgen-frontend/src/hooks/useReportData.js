@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import API from '../utils/api';
+import API from '../api/axios';
 
 export default function useReportData(projectId, activityType) {
   const [project, setProject] = useState(null);

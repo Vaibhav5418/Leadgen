@@ -1,6 +1,5 @@
-import React,
+import React, { useState, useEffect, useMemo } from 'react';
 import useReportData from '../hooks/useReportData';
- { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import { standardChartOptions as chartOptions } from '../utils/chartOptions';
