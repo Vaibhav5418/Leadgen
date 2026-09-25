@@ -540,7 +540,7 @@ router.get('/team-performance', authenticate, async (req, res) => {
     });
     
     // Sort dates and build chart data
-    const sortedDates = Object.keys(activitiesByDate).sort();
+    const sortedDates = Object.keys(activitiesByDate).sort((a, b) => a.localeCompare(b));
     sortedDates.forEach(date => {
       const dateObj = new Date(date);
       chartLabels.push(dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));

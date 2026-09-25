@@ -5189,7 +5189,7 @@ export default function ProjectDetail() {
         onClose={() => setBulkImportModal(false)}
         projectId={id}
         onImportSuccess={() => {
-          fetchImportedContacts(1, false);
+          fetchImportedContacts(1);
           fetchAllProjectActivities();
         }}
       />

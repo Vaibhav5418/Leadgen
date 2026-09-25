@@ -9,7 +9,9 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 # Copy application source code
-COPY . .
+COPY src/ ./src/
+COPY server.js ./
+COPY set-admin.js ./
 
 # Set environment
 ENV NODE_ENV=production

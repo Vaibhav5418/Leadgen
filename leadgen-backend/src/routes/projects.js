@@ -495,16 +495,16 @@ router.get('/analytics', authenticate, async (req, res) => {
                   in: {
                     $switch: {
                       branches: [
-                        { case: { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] }, then: '$$s' },
-                        { case: { $in: ['$$s', ['Interested', 'Out of Office']] }, then: 'CIP' },
-                        { case: { $in: ['$$s', ['Bounce', 'Opt-Out']] }, then: 'Lost' },
-                        { case: { $eq: ['$$s', 'Wrong Person'] }, then: 'Lost' },
-                        { case: { $in: ['$$s', ['Details Shared', 'Existing']] }, then: 'CIP' },
-                        { case: { $eq: ['$$s', 'Demo Booked'] }, then: 'Meeting Scheduled' },
-                        { case: { $eq: ['$$s', 'Demo Completed'] }, then: 'Meeting Completed' },
-                        { case: { $eq: ['$$s', 'Future'] }, then: 'Potential Future' },
-                        { case: { $eq: ['$$s', 'Call Back'] }, then: 'CIP' },
-                        { case: { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] }, then: 'No Reply' }
+                        { case: { $in: ['$$s', ['CIP', 'SQL', 'WON', 'Lost', 'No Reply', 'Not Interested', 'Meeting Proposed', 'Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting', 'Tech Discussion', 'Low Potential - Open', 'Potential Future']] }, ['then']: '$$s' },
+                        { case: { $in: ['$$s', ['Interested', 'Out of Office']] }, ['then']: 'CIP' },
+                        { case: { $in: ['$$s', ['Bounce', 'Opt-Out']] }, ['then']: 'Lost' },
+                        { case: { $eq: ['$$s', 'Wrong Person'] }, ['then']: 'Lost' },
+                        { case: { $in: ['$$s', ['Details Shared', 'Existing']] }, ['then']: 'CIP' },
+                        { case: { $eq: ['$$s', 'Demo Booked'] }, ['then']: 'Meeting Scheduled' },
+                        { case: { $eq: ['$$s', 'Demo Completed'] }, ['then']: 'Meeting Completed' },
+                        { case: { $eq: ['$$s', 'Future'] }, ['then']: 'Potential Future' },
+                        { case: { $eq: ['$$s', 'Call Back'] }, ['then']: 'CIP' },
+                        { case: { $in: ['$$s', ['Ring', 'Busy', 'Hang Up', 'Switch Off', 'Invalid']] }, ['then']: 'No Reply' }
                       ],
                       default: { $cond: [{ $ne: ['$$s', ''] }, '$$s', 'New'] }
                     }
@@ -848,7 +848,7 @@ router.get('/analytics', authenticate, async (req, res) => {
       trendData[date][item._id.type] = item.count;
     });
     
-    const trendLabels = Object.keys(trendData).sort();
+    const trendLabels = Object.keys(trendData).sort((a, b) => a.localeCompare(b));
     const trendCallData = trendLabels.map(date => trendData[date].call || 0);
     const trendEmailData = trendLabels.map(date => trendData[date].email || 0);
     const trendLinkedInData = trendLabels.map(date => trendData[date].linkedin || 0);
@@ -2465,7 +2465,7 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       trendData[date][item._id.type] = item.count;
     });
     
-    const trendLabels = Object.keys(trendData).sort();
+    const trendLabels = Object.keys(trendData).sort((a, b) => a.localeCompare(b));
     const trendCallData = trendLabels.map(date => trendData[date].call || 0);
     const trendEmailData = trendLabels.map(date => trendData[date].email || 0);
     const trendLinkedInData = trendLabels.map(date => trendData[date].linkedin || 0);

@@ -1075,7 +1075,7 @@ router.get('/', authenticate, async (req, res) => {
               if (item.hasFollowUp) dateMap[item.date].completed++;
               if (item.isOverdue && !item.hasFollowUp) dateMap[item.date].overdue++;
             });
-            const sortedDates = Object.keys(dateMap).sort();
+            const sortedDates = Object.keys(dateMap).sort((a, b) => a.localeCompare(b));
             return {
               labels: sortedDates,
               total: sortedDates.map(d => dateMap[d].total),
