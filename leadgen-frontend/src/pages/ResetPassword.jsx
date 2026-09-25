@@ -120,10 +120,11 @@ export default function ResetPassword() {
           {/* Reset Password Form */}
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-1">
                 Account Email
               </label>
               <input
+                id="reset-email"
                 type="email"
                 name="email"
                 value={formData.email}
@@ -135,11 +136,12 @@ export default function ResetPassword() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="reset-password" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
               <div className="relative">
                 <input
+                  id="reset-password"
                   type={showNewPassword ? 'text' : 'password'}
                   name="newPassword"
                   value={formData.newPassword}
@@ -172,11 +174,12 @@ export default function ResetPassword() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="reset-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
               </label>
               <div className="relative">
                 <input
+                  id="reset-confirm-password"
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}

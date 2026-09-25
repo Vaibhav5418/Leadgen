@@ -283,10 +283,11 @@ export default function Login() {
             <form onSubmit={handleLoginOrRegister} className="space-y-4">
               {mode === 'register' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="login-name" className="block text-sm font-medium text-gray-700 mb-1">
                     Name
                   </label>
                   <input
+                    id="login-name"
                     type="text"
                     name="name"
                     value={formData.name}
@@ -298,10 +299,11 @@ export default function Login() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
                 </label>
                 <input
+                  id="login-email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -314,7 +316,7 @@ export default function Login() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="login-password" className="block text-sm font-medium text-gray-700">
                     Password
                   </label>
                   {mode === 'login' && (
@@ -329,6 +331,7 @@ export default function Login() {
                 </div>
                 <div className="relative">
                   <input
+                    id="login-password"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
@@ -384,10 +387,11 @@ export default function Login() {
             /* Forgot Password Form */
             <form onSubmit={handleForgotPassword} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-gray-700 mb-1">
                   Account Email
                 </label>
                 <input
+                  id="forgot-email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -399,11 +403,12 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="forgot-new-password" className="block text-sm font-medium text-gray-700 mb-1">
                   New Password
                 </label>
                 <div className="relative">
                   <input
+                    id="forgot-new-password"
                     type={showNewPassword ? 'text' : 'password'}
                     name="newPassword"
                     value={formData.newPassword}
@@ -433,11 +438,12 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="forgot-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
                   Confirm New Password
                 </label>
                 <div className="relative">
                   <input
+                    id="forgot-confirm-password"
                     type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}

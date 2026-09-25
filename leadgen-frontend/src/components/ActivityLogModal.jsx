@@ -631,12 +631,15 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
 
   return (
     <div 
+      role="presentation"
       className={`fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity duration-300 ${
         isVisible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={handleClose}
     >
       <div 
+        role="dialog"
+        aria-modal="true"
         className={`bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col transform transition-all duration-300 ${
           isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
         }`}
@@ -887,17 +890,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Phone Number Input (Only for Call Activity) */}
             {type === 'call' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-phone-number" className="block text-xs font-semibold text-gray-700 mb-2">
                   Phone Number <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                  </svg>
-                </div>
-                    <input
+                    <input id="alm-phone-number"
                       type="tel"
                       value={formData.phoneNumber}
                       onChange={(e) => handleChange('phoneNumber', e.target.value)}
@@ -946,17 +944,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Email Input (Only for Email Activity) */}
             {type === 'email' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-email" className="block text-xs font-semibold text-gray-700 mb-2">
                   Email Address <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                    <input
+                    <input id="alm-email"
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleChange('email', e.target.value)}
@@ -1005,16 +998,16 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Email Date Field (Only for Email Activity) */}
             {type === 'email' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-email-date" className="block text-xs font-semibold text-gray-700 mb-2">
                   Email Date <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <input
+                  <input id="alm-email-date"
                     type="date"
                     value={formData.emailDate}
                     onChange={(e) => handleChange('emailDate', e.target.value)}
@@ -1034,17 +1027,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* LinkedIn URL Input (Only for LinkedIn Activity) */}
             {type === 'linkedin' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-linkedin-url" className="block text-xs font-semibold text-gray-700 mb-2">
                   LinkedIn Profile URL <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                  </svg>
-                    </div>
-                    <input
+                    <input id="alm-linkedin-url"
                       type="url"
                       value={formData.linkedInUrl}
                       onChange={(e) => handleChange('linkedInUrl', e.target.value)}
@@ -1097,16 +1085,16 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* LinkedIn Date Field (Only for LinkedIn Activity) */}
             {type === 'linkedin' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-linkedin-date" className="block text-xs font-semibold text-gray-700 mb-2">
                   LinkedIn Date <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <input
+                  <input id="alm-linkedin-date"
                     type="date"
                     value={formData.linkedinDate}
                     onChange={(e) => handleChange('linkedinDate', e.target.value)}
@@ -1127,9 +1115,9 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {type !== 'call' && (
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-gray-700">
-                Select Template (Optional)
-              </label>
+                  <label htmlFor="alm-template-option" className="block text-xs font-semibold text-gray-700">
+                    Select Template (Optional)
+                  </label>
                   {(type === 'linkedin' || type === 'email') && (
                     <button
                       type="button"
@@ -1143,7 +1131,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                     </button>
                   )}
                 </div>
-              <select
+              <select id="alm-template-option"
                 value={formData.templateOption}
                 onChange={(e) => handleChange('templateOption', e.target.value)}
                 className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1177,9 +1165,9 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {type === 'email' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-gray-700">
+                  <span className="block text-xs font-semibold text-gray-700">
                     Email Content
-                  </label>
+                  </span>
                   <button
                     type="button"
                     onClick={handleGenerateEmail}
@@ -1205,10 +1193,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                   </button>
                 </div>
                 <div className="mb-3">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  <label htmlFor="alm-subject" className="block text-xs font-semibold text-gray-700 mb-2">
                     Email Subject <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
-                  <input
+                  <input id="alm-subject"
                     type="text"
                     value={formData.subject}
                     onChange={(e) => handleChange('subject', e.target.value)}
@@ -1217,6 +1205,8 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                   />
                 </div>
                 <textarea
+                  id="alm-email-content"
+                  aria-label="Email Content"
                   value={formData.message}
                   onChange={(e) => handleChange('message', e.target.value)}
                   rows={8}
@@ -1236,9 +1226,9 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {type === 'linkedin' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-gray-700">
+                  <span className="block text-xs font-semibold text-gray-700">
                     LinkedIn Message Content
-                  </label>
+                  </span>
                   <button
                     type="button"
                     onClick={handleGenerateLinkedIn}
@@ -1264,6 +1254,8 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                   </button>
                 </div>
                 <textarea
+                  id="alm-linkedin-content"
+                  aria-label="LinkedIn Message Content"
                   value={formData.message}
                   onChange={(e) => handleChange('message', e.target.value)}
                   rows={4}
@@ -1282,7 +1274,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* LinkedIn Account Name Field (Only for LinkedIn Activity) */}
             {type === 'linkedin' && (
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-              <label className="block text-xs font-semibold text-gray-700 mb-2">
+              <label htmlFor="alm-linkedin-account" className="block text-xs font-semibold text-gray-700 mb-2">
                   LinkedIn Account Used <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
                 <div className="flex gap-2">
@@ -1293,6 +1285,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                       </svg>
                     </div>
                     <select
+                      id="alm-linkedin-account"
                       value={formData.linkedInAccountName}
                       onChange={(e) => handleChange('linkedInAccountName', e.target.value)}
                       className="w-full pl-10 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1314,6 +1307,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                 {showAddAccount && (
                   <div className="mt-3 flex gap-2">
                     <input
+                      aria-label="Enter new LinkedIn account name"
                       type="text"
                       value={newAccountName}
                       onChange={(e) => setNewAccountName(e.target.value)}
@@ -1349,10 +1343,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {type === 'linkedin' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  <label htmlFor="alm-ln-request-sent" className="block text-xs font-semibold text-gray-700 mb-2">
                     Ln Request Sent <span className="text-gray-400 text-xs font-normal">(Optional)</span>
-              </label>
-              <select
+                  </label>
+                  <select id="alm-ln-request-sent"
                     value={formData.lnRequestSent}
                     onChange={(e) => handleChange('lnRequestSent', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1373,10 +1367,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                   </p>
                 </div>
                 <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                  <label htmlFor="alm-connected" className="block text-xs font-semibold text-gray-700 mb-2">
                     Connected <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
-                  <select
+                  <select id="alm-connected"
                     value={formData.connected}
                     onChange={(e) => handleChange('connected', e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1398,10 +1392,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Status Field (For Email and LinkedIn Activities) */}
             {(type === 'email' || type === 'linkedin') && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-status" className="block text-xs font-semibold text-gray-700 mb-2">
                   Status <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
-                <select
+                <select id="alm-status"
                   value={formData.status}
                   onChange={(e) => handleChange('status', e.target.value)}
                 className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400 ${
@@ -1460,12 +1454,13 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Call Number Field (Only for Call Activity) - BEFORE Outcome */}
             {type === 'call' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <span className="block text-xs font-semibold text-gray-700 mb-2">
                   Call <span className="text-gray-400 text-xs font-normal">(Optional)</span>
-                </label>
+                </span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
                     <select
+                      aria-label="Select call number"
                       value={formData.callNumber}
                       onChange={(e) => handleChange('callNumber', e.target.value)}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1490,6 +1485,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                       </svg>
                     </div>
                     <input
+                      aria-label="Select call date"
                       type="date"
                       value={formData.callDate}
                       onChange={(e) => handleChange('callDate', e.target.value)}
@@ -1510,10 +1506,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Call Status Field (Only for Call Activity) - AFTER Call Number */}
             {type === 'call' && (
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-call-status" className="block text-xs font-semibold text-gray-700 mb-2">
                   Status <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
-                <select
+                <select id="alm-call-status"
                   value={formData.callStatus}
                   onChange={(e) => handleChange('callStatus', e.target.value)}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400"
@@ -1545,10 +1541,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
 
             {/* Conversation Notes */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-              <label className="block text-xs font-semibold text-gray-700 mb-2">
+              <label htmlFor="alm-conversation-notes" className="block text-xs font-semibold text-gray-700 mb-2">
                 Conversation Notes <span className="text-gray-400 text-xs font-normal">(optional, but helpful)</span>
               </label>
-              <textarea
+              <textarea id="alm-conversation-notes"
                 value={formData.conversationNotes}
                 onChange={(e) => handleChange('conversationNotes', e.target.value)}
                 rows={4}
@@ -1560,10 +1556,10 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
             {/* Next Action and Date */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
+                <label htmlFor="alm-next-action" className="block text-xs font-semibold text-gray-700 mb-2">
                   Next Action <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                 </label>
-                <select
+                <select id="alm-next-action"
                   value={formData.nextAction}
                   onChange={(e) => handleChange('nextAction', e.target.value)}
                   className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white hover:border-gray-400 ${
@@ -1588,13 +1584,18 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                 <p className="mt-2 text-xs text-gray-500">What should happen next?</p>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-                <label className="block text-xs font-semibold text-gray-700 mb-2">
-                  Next Action Date <span className={formData.nextAction ? 'text-red-500' : 'text-gray-400 text-xs font-normal'}>
-                    {formData.nextAction ? '*' : '(Optional)'}
+                <label htmlFor="alm-next-action-date" className="block text-xs font-semibold text-gray-700 mb-2">
+                  Next Action Date <span className={formData.nextAction ? "text-red-500" : "text-gray-400 text-xs font-normal"}>
+                    {formData.nextAction ? "*" : "(Optional)"}
                   </span>
                 </label>
                 <div className="relative">
-                  <input
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <input id="alm-next-action-date"
                     type="date"
                     value={formData.nextActionDate}
                     onChange={(e) => handleChange('nextActionDate', e.target.value)}

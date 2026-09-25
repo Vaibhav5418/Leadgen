@@ -830,6 +830,7 @@ export default function AdminPanel() {
               <div className="relative flex-1 max-w-md">
                 <input
                   type="text"
+                  aria-label="Search by name, email, or employee ID"
                   value={employeeSearch}
                   onChange={(e) => {
                     setEmployeeSearch(e.target.value);
@@ -851,6 +852,7 @@ export default function AdminPanel() {
               <div className="flex items-center gap-3 flex-wrap">
                 {/* Role Filter */}
                 <select
+                  aria-label="Filter by employee role"
                   value={employeeRoleFilter}
                   onChange={(e) => {
                     setEmployeeRoleFilter(e.target.value);
@@ -865,6 +867,7 @@ export default function AdminPanel() {
 
                 {/* Status Filter */}
                 <select
+                  aria-label="Filter by employee status"
                   value={employeeStatusFilter}
                   onChange={(e) => {
                     setEmployeeStatusFilter(e.target.value);
@@ -1097,6 +1100,7 @@ export default function AdminPanel() {
               <div className="relative flex-1 max-w-md">
                 <input
                   type="text"
+                  aria-label="Search projects by company name or industry"
                   value={projectSearch}
                   onChange={(e) => {
                     setProjectSearch(e.target.value);
@@ -1117,6 +1121,7 @@ export default function AdminPanel() {
 
               <div className="flex items-center gap-3">
                 <select
+                  aria-label="Filter by project status"
                   value={projectStatusFilter}
                   onChange={(e) => {
                     setProjectStatusFilter(e.target.value);
@@ -1410,6 +1415,7 @@ export default function AdminPanel() {
               <div className="relative flex-1 max-w-md">
                 <input
                   type="text"
+                  aria-label="Search audit trail by user, admin, project, or details"
                   value={auditSearch}
                   onChange={(e) => {
                     setAuditSearch(e.target.value);
@@ -1430,6 +1436,7 @@ export default function AdminPanel() {
 
               <div className="flex items-center gap-3">
                 <select
+                  aria-label="Filter by audit action type"
                   value={auditActionFilter}
                   onChange={(e) => {
                     setAuditActionFilter(e.target.value);
@@ -1636,6 +1643,7 @@ export default function AdminPanel() {
             <div className="space-y-3 mb-6">
               {/* Admin Option */}
               <label
+                htmlFor="role-admin"
                 className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
                   selectedNewRole === 'admin'
                     ? 'bg-purple-50/70 border-purple-500 ring-2 ring-purple-500/20'
@@ -1643,6 +1651,7 @@ export default function AdminPanel() {
                 }`}
               >
                 <input
+                  id="role-admin"
                   type="radio"
                   name="role"
                   value="admin"
@@ -1665,6 +1674,7 @@ export default function AdminPanel() {
 
               {/* Employee Option */}
               <label
+                htmlFor="role-employee"
                 className={`flex items-start gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
                   selectedNewRole === 'employee'
                     ? 'bg-gray-100 border-gray-400 ring-2 ring-gray-400/20'
@@ -1672,6 +1682,7 @@ export default function AdminPanel() {
                 }`}
               >
                 <input
+                  id="role-employee"
                   type="radio"
                   name="role"
                   value="employee"
@@ -1791,6 +1802,7 @@ export default function AdminPanel() {
                   return (
                     <label
                       key={proj._id}
+                      htmlFor={`proj-assign-${proj._id}`}
                       className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                         isChecked
                           ? 'bg-blue-50/70 border-blue-300'
@@ -1799,6 +1811,7 @@ export default function AdminPanel() {
                     >
                       <div className="flex items-center gap-3">
                         <input
+                          id={`proj-assign-${proj._id}`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {
@@ -1898,6 +1911,7 @@ export default function AdminPanel() {
                   return (
                     <label
                       key={emp._id}
+                      htmlFor={`emp-assign-${emp._id}`}
                       className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
                         isChecked
                           ? 'bg-blue-50/70 border-blue-300'
@@ -1906,6 +1920,7 @@ export default function AdminPanel() {
                     >
                       <div className="flex items-center gap-3">
                         <input
+                          id={`emp-assign-${emp._id}`}
                           type="checkbox"
                           checked={isChecked}
                           onChange={(e) => {

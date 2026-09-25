@@ -48,7 +48,7 @@ const getContactImportDate = (contact) => {
     const idStr = contact._id.toString ? contact._id.toString() : String(contact._id);
     if (idStr.length >= 8) {
       // ObjectId timestamp is in the first 8 hex characters
-      const timestamp = parseInt(idStr.substring(0, 8), 16) * 1000; // Convert to milliseconds
+      const timestamp = Number.parseInt(idStr.substring(0, 8), 16) * 1000; // Convert to milliseconds
       return new Date(timestamp);
     }
   } catch (e) {
@@ -403,7 +403,7 @@ export default function ProjectDetail() {
         setFilterMatchType(restoredFilterMatchType);
         
         // Restore page number
-        const pageNum = parseInt(restoredPage, 10);
+        const pageNum = Number.parseInt(restoredPage, 10);
         if (pageNum >= 1 && pageNum !== contactsPage) {
           setContactsPage(pageNum);
         }
@@ -533,12 +533,12 @@ export default function ProjectDetail() {
       fetchProject().then(() => {
         // Get page from URL params, then optional localStorage, then default 1
         const pageFromUrl = searchParams.get('page');
-        let initialPage = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
+        let initialPage = pageFromUrl ? Number.parseInt(pageFromUrl, 10) : 1;
         try {
           if (!pageFromUrl && id) {
             const stored = localStorage.getItem(`prospectManagementPage_${id}`);
             if (stored) {
-              const p = parseInt(stored, 10);
+              const p = Number.parseInt(stored, 10);
               if (p >= 1) {
                 initialPage = p;
                 setContactsPage(p);
@@ -656,7 +656,7 @@ export default function ProjectDetail() {
     }
     
     const pageParam = searchParams.get('page');
-    const pageNum = pageParam ? parseInt(pageParam, 10) : 1;
+    const pageNum = pageParam ? Number.parseInt(pageParam, 10) : 1;
     
     // Only update if page number is valid and different from current
     if (pageNum >= 1 && pageNum !== contactsPage) {
@@ -668,7 +668,7 @@ export default function ProjectDetail() {
         }
         
         const currentPageParam = searchParams.get('page');
-        const currentPageNum = currentPageParam ? parseInt(currentPageParam, 10) : 1;
+        const currentPageNum = currentPageParam ? Number.parseInt(currentPageParam, 10) : 1;
         const currentContactsPage = contactsPage;
         
         // Only update if URL and state are still out of sync (external navigation)
@@ -752,7 +752,7 @@ export default function ProjectDetail() {
   // Pagination state - initialize from URL params
   const [contactsPage, setContactsPage] = useState(() => {
     const pageParam = searchParams.get('page');
-    return pageParam ? parseInt(pageParam, 10) : 1;
+    return pageParam ? Number.parseInt(pageParam, 10) : 1;
   });
   const [contactsTotal, setContactsTotal] = useState(0);
   const [contactsTotalPages, setContactsTotalPages] = useState(1);
@@ -1351,7 +1351,7 @@ export default function ProjectDetail() {
     if (!dateInput) return 'N/A';
     // Handle both Date objects and date strings
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    if (isNaN(date.getTime())) return 'N/A';
+    if (Number.isNaN(date.getTime())) return 'N/A';
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
 
@@ -1359,7 +1359,7 @@ export default function ProjectDetail() {
     if (!dateInput) return 'N/A';
     // Handle both Date objects and date strings
     const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
-    if (isNaN(date.getTime())) return 'N/A';
+    if (Number.isNaN(date.getTime())) return 'N/A';
     return date.toLocaleString('en-US', { 
       year: 'numeric', 
       month: 'short', 
@@ -2175,7 +2175,7 @@ export default function ProjectDetail() {
               if (!mostRecentActivity || !mostRecentActivity.nextActionDate) return false;
               try {
                 const d = new Date(mostRecentActivity.nextActionDate);
-                if (isNaN(d.getTime())) return false; // Invalid date
+                if (Number.isNaN(d.getTime())) return false; // Invalid date
                 d.setHours(0, 0, 0, 0);
                 hasMatchingActivity = d < today;
               } catch (dateError) {
@@ -2187,7 +2187,7 @@ export default function ProjectDetail() {
                 if (!a.nextActionDate) return false;
                 try {
                   const d = new Date(a.nextActionDate);
-                  if (isNaN(d.getTime())) return false; // Invalid date
+                  if (Number.isNaN(d.getTime())) return false; // Invalid date
                   d.setHours(0, 0, 0, 0);
                   if (kpiFilter.metric === 'followups') {
                     // Show all follow-ups (today, tomorrow, or missed)
@@ -2286,7 +2286,7 @@ export default function ProjectDetail() {
               if (!mostRecentActivity || !mostRecentActivity.nextActionDate) return false;
               try {
                 const d = new Date(mostRecentActivity.nextActionDate);
-                if (isNaN(d.getTime())) return false; // Invalid date
+                if (Number.isNaN(d.getTime())) return false; // Invalid date
                 d.setHours(0, 0, 0, 0);
                 hasMatchingActivity = d < today;
               } catch (dateError) {
@@ -2298,7 +2298,7 @@ export default function ProjectDetail() {
                 if (!a.nextActionDate) return false;
                 try {
                   const d = new Date(a.nextActionDate);
-                  if (isNaN(d.getTime())) return false; // Invalid date
+                  if (Number.isNaN(d.getTime())) return false; // Invalid date
                   d.setHours(0, 0, 0, 0);
                   if (kpiFilter.metric === 'followups') {
                     // Show all follow-ups (today, tomorrow, or missed)
@@ -2339,7 +2339,7 @@ export default function ProjectDetail() {
               if (!mostRecentActivity || !mostRecentActivity.nextActionDate) return false;
               try {
                 const d = new Date(mostRecentActivity.nextActionDate);
-                if (isNaN(d.getTime())) return false; // Invalid date
+                if (Number.isNaN(d.getTime())) return false; // Invalid date
                 d.setHours(0, 0, 0, 0);
                 hasMatchingActivity = d < today;
               } catch (dateError) {
@@ -2351,7 +2351,7 @@ export default function ProjectDetail() {
                 if (!a.nextActionDate) return false;
                 try {
                   const d = new Date(a.nextActionDate);
-                  if (isNaN(d.getTime())) return false; // Invalid date
+                  if (Number.isNaN(d.getTime())) return false; // Invalid date
                   d.setHours(0, 0, 0, 0);
                   if (kpiFilter.metric === 'followups') {
                     // Show all follow-ups (today, tomorrow, or missed)
@@ -2470,7 +2470,7 @@ export default function ProjectDetail() {
               } else {
                 try {
                   const d = new Date(mostRecentActivity.nextActionDate);
-                  if (isNaN(d.getTime())) {
+                  if (Number.isNaN(d.getTime())) {
                     hasMatchingActivity = false;
                   } else {
                     d.setHours(0, 0, 0, 0);
@@ -2487,7 +2487,7 @@ export default function ProjectDetail() {
               if (!a.nextActionDate) return false;
               try {
                 const d = new Date(a.nextActionDate);
-                if (isNaN(d.getTime())) return false; // Invalid date
+                if (Number.isNaN(d.getTime())) return false; // Invalid date
                 d.setHours(0, 0, 0, 0);
                 if (kpiFilter.metric === 'followups') {
                   // Show all follow-ups (today, tomorrow, or missed)
@@ -2634,7 +2634,7 @@ export default function ProjectDetail() {
             } else {
               try {
                 const d = new Date(mostRecentActivity.nextActionDate);
-                if (isNaN(d.getTime())) {
+                if (Number.isNaN(d.getTime())) {
                   hasMatchingActivity = false;
                 } else {
                   d.setHours(0, 0, 0, 0);
@@ -2704,7 +2704,7 @@ export default function ProjectDetail() {
               } else {
                 try {
                   const d = new Date(mostRecentActivity.nextActionDate);
-                  if (isNaN(d.getTime())) {
+                  if (Number.isNaN(d.getTime())) {
                     hasMatchingActivity = false;
                   } else {
                     d.setHours(0, 0, 0, 0);
@@ -2721,7 +2721,7 @@ export default function ProjectDetail() {
               if (!a.nextActionDate) return false;
               try {
                 const d = new Date(a.nextActionDate);
-                if (isNaN(d.getTime())) return false; // Invalid date
+                if (Number.isNaN(d.getTime())) return false; // Invalid date
                 d.setHours(0, 0, 0, 0);
                 if (kpiFilter.metric === 'followups') {
                   // Show all follow-ups (today, tomorrow, or missed)
@@ -3989,6 +3989,7 @@ export default function ProjectDetail() {
               </svg>
             </div>
             <input
+              aria-label="Search contacts by name, company, email"
               type="text"
               placeholder="Search by name, company, email..."
               value={searchQuery}
@@ -4035,6 +4036,7 @@ export default function ProjectDetail() {
 
           <div className="ml-auto flex items-center gap-3">
             <select
+              aria-label="Filter contacts by stage"
               value={filterStatus}
               onChange={(e) => {
                 setFilterStatus(e.target.value);
@@ -4083,6 +4085,7 @@ export default function ProjectDetail() {
               </optgroup>
             </select>
             <select
+              aria-label="Filter contacts by action date"
               value={filterActionDate}
               onChange={(e) => {
                 setFilterActionDate(e.target.value);
@@ -4103,6 +4106,7 @@ export default function ProjectDetail() {
             {filterActionDate === 'custom' && (
               <div className="flex items-center gap-1">
                 <input
+                  aria-label="Action date from"
                   type="date"
                   value={filterActionDateFrom}
                   onChange={(e) => {
@@ -4117,6 +4121,7 @@ export default function ProjectDetail() {
                 />
                 <span className="text-xs text-gray-500">to</span>
                 <input
+                  aria-label="Action date to"
                   type="date"
                   value={filterActionDateTo}
                   onChange={(e) => {
@@ -4132,6 +4137,7 @@ export default function ProjectDetail() {
               </div>
             )}
             <select
+              aria-label="Filter contacts by last interaction"
               value={filterLastInteraction}
               onChange={(e) => {
                 setFilterLastInteraction(e.target.value);
@@ -4152,6 +4158,7 @@ export default function ProjectDetail() {
             {filterLastInteraction === 'custom' && (
               <div className="flex items-center gap-1">
                 <input
+                  aria-label="Last interaction date from"
                   type="date"
                   value={filterLastInteractionFrom}
                   onChange={(e) => {
@@ -4166,6 +4173,7 @@ export default function ProjectDetail() {
                 />
                 <span className="text-xs text-gray-500">to</span>
                 <input
+                  aria-label="Last interaction date to"
                   type="date"
                   value={filterLastInteractionTo}
                   onChange={(e) => {
@@ -4181,6 +4189,7 @@ export default function ProjectDetail() {
               </div>
             )}
             <select
+              aria-label="Filter contacts by import date"
               value={filterImportDate}
               onChange={(e) => {
                 setFilterImportDate(e.target.value);
@@ -4199,6 +4208,7 @@ export default function ProjectDetail() {
             {filterImportDate === 'custom' && (
               <div className="flex items-center gap-1">
                 <input
+                  aria-label="Import date from"
                   type="date"
                   value={filterImportDateFrom}
                   onChange={(e) => {
@@ -4213,6 +4223,7 @@ export default function ProjectDetail() {
                 />
                 <span className="text-xs text-gray-500">to</span>
                 <input
+                  aria-label="Import date to"
                   type="date"
                   value={filterImportDateTo}
                   onChange={(e) => {
@@ -4227,8 +4238,9 @@ export default function ProjectDetail() {
                 />
               </div>
             )}
-            <label className="flex items-center gap-2 px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-colors cursor-pointer">
+            <label htmlFor="filter-no-activity" className="flex items-center gap-2 px-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white hover:border-gray-400 transition-colors cursor-pointer">
               <input
+                id="filter-no-activity"
                 type="checkbox"
                 checked={filterNoActivity}
                 onChange={(e) => setFilterNoActivity(e.target.checked)}
@@ -4690,6 +4702,7 @@ export default function ProjectDetail() {
                 <tr>
                   <th className="px-3 py-2.5 text-left text-[10px] font-semibold text-gray-700 uppercase tracking-wider w-12">
                     <input
+                      aria-label="Select all contacts"
                       type="checkbox"
                       checked={isAllSelected}
                       onChange={handleSelectAll}
@@ -4735,8 +4748,16 @@ export default function ProjectDetail() {
                   </th>
                   <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-[12%] relative" ref={statusFilterRef}>
                     <div 
-                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors rounded px-1 py-0.5 -mx-1 -my-0.5"
+                      role="button"
+                      tabIndex={0}
+                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 transition-colors rounded px-1 py-0.5 -mx-1 -my-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       onClick={() => setShowStatusFilter(!showStatusFilter)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setShowStatusFilter(!showStatusFilter);
+                        }
+                      }}
                     >
                       Status
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -4921,6 +4942,7 @@ export default function ProjectDetail() {
                       >
                         <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
                           <input
+                            aria-label={`Select contact ${contact.name || ''}`}
                             type="checkbox"
                             checked={selectedContacts.has(contactId.toString())}
                             onChange={(e) => handleContactSelect(contactId, e.target.checked)}

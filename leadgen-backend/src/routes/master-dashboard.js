@@ -939,8 +939,8 @@ router.get('/', authenticate, async (req, res) => {
           totalTouchesThisMonth,
           totalMeetingsBookedThisWeek,
           totalMeetingsBookedThisMonth,
-          weightedConversionRate: parseFloat(weightedConversionRate.toFixed(2)),
-          slaCompliance: parseFloat(slaCompliance.toFixed(2))
+          weightedConversionRate: Number.parseFloat(weightedConversionRate.toFixed(2)),
+          slaCompliance: Number.parseFloat(slaCompliance.toFixed(2))
         },
 
         // Rankings
@@ -951,7 +951,7 @@ router.get('/', authenticate, async (req, res) => {
             .slice(0, 10)
             .map(p => ({
               projectName: p.projectName || 'Unknown',
-              meetingsPer100Leads: parseFloat(p.meetingsPer100Leads.toFixed(2)),
+              meetingsPer100Leads: Number.parseFloat(p.meetingsPer100Leads.toFixed(2)),
               totalProspects: p.totalProspects,
               meetings: p.meetings
             })),
@@ -960,21 +960,21 @@ router.get('/', authenticate, async (req, res) => {
             .slice(0, 10)
             .map(p => ({
               ...p,
-              dataQualityScore: parseFloat(p.dataQualityScore.toFixed(2))
+              dataQualityScore: Number.parseFloat(p.dataQualityScore.toFixed(2))
             })),
           channelEfficiency: {
             linkedin: {
-              acceptanceRate: linkedinTotal > 0 ? parseFloat(((linkedinAccepted / linkedinTotal) * 100).toFixed(2)) : 0,
+              acceptanceRate: linkedinTotal > 0 ? Number.parseFloat(((linkedinAccepted / linkedinTotal) * 100).toFixed(2)) : 0,
               total: linkedinTotal,
               accepted: linkedinAccepted
             },
             call: {
-              connectRate: callsTotal > 0 ? parseFloat(((callsConnected / callsTotal) * 100).toFixed(2)) : 0,
+              connectRate: callsTotal > 0 ? Number.parseFloat(((callsConnected / callsTotal) * 100).toFixed(2)) : 0,
               total: callsTotal,
               connected: callsConnected
             },
             email: {
-              replyRate: emailsTotal > 0 ? parseFloat(((emailsReplied / emailsTotal) * 100).toFixed(2)) : 0,
+              replyRate: emailsTotal > 0 ? Number.parseFloat(((emailsReplied / emailsTotal) * 100).toFixed(2)) : 0,
               total: emailsTotal,
               replied: emailsReplied
             }
@@ -996,13 +996,13 @@ router.get('/', authenticate, async (req, res) => {
             projectName: p.projectName || 'Unknown',
             activityCount: p.activityCount,
             totalContacts: p.totalContacts,
-            activityPerContact: parseFloat(p.activityPerContact.toFixed(2))
+            activityPerContact: Number.parseFloat(p.activityPerContact.toFixed(2))
           })),
           highBounceProjects: highBounceProjects.map(p => ({
             projectName: p.projectName || 'Unknown',
             bounceCount: p.bounceCount,
             wrongPersonCount: p.wrongPersonCount,
-            errorRate: parseFloat(p.errorRate.toFixed(2))
+            errorRate: Number.parseFloat(p.errorRate.toFixed(2))
           })),
           missingFollowUps: missingFollowUps.map(p => ({
             projectName: p.projectName || 'Unknown',
@@ -1014,10 +1014,10 @@ router.get('/', authenticate, async (req, res) => {
         dataQuality: {
           leadsAddedDaily,
           leadsAddedWeekly,
-          validEmailPercent: parseFloat(emailQuality.toFixed(2)),
-          validPhonePercent: parseFloat(phoneQuality.toFixed(2)),
-          duplicatePercent: parseFloat(duplicateRate.toFixed(2)),
-          dataQualityScore: parseFloat(dataQualityScore.toFixed(2)),
+          validEmailPercent: Number.parseFloat(emailQuality.toFixed(2)),
+          validPhonePercent: Number.parseFloat(phoneQuality.toFixed(2)),
+          duplicatePercent: Number.parseFloat(duplicateRate.toFixed(2)),
+          dataQualityScore: Number.parseFloat(dataQualityScore.toFixed(2)),
           totalProspects,
           validEmailCount,
           validPhoneCount,
@@ -1027,18 +1027,18 @@ router.get('/', authenticate, async (req, res) => {
         // LinkedIn
         linkedin: {
           connectionRequestsSent,
-          acceptanceRate: connectionRequestsSent > 0 ? parseFloat(((linkedinAcceptedCount / connectionRequestsSent) * 100).toFixed(2)) : 0,
+          acceptanceRate: connectionRequestsSent > 0 ? Number.parseFloat(((linkedinAcceptedCount / connectionRequestsSent) * 100).toFixed(2)) : 0,
           accepted: linkedinAcceptedCount,
           messagesSent,
           replies: linkedinReplies,
-          replyRate: messagesSent > 0 ? parseFloat(((linkedinReplies / messagesSent) * 100).toFixed(2)) : 0,
+          replyRate: messagesSent > 0 ? Number.parseFloat(((linkedinReplies / messagesSent) * 100).toFixed(2)) : 0,
           meetingsBooked: linkedInData.meetingsBooked || 0
         },
 
         // Cold Call
         coldCall: {
           callsMade: callsMadeCount,
-          connectRate: callsMadeCount > 0 ? parseFloat(((callsConnectedCount / callsMadeCount) * 100).toFixed(2)) : 0,
+          connectRate: callsMadeCount > 0 ? Number.parseFloat(((callsConnectedCount / callsMadeCount) * 100).toFixed(2)) : 0,
           connected: callsConnectedCount,
           decisionMakerConnects,
           interested: interestedCount,
@@ -1049,9 +1049,9 @@ router.get('/', authenticate, async (req, res) => {
         // Email
         email: {
           emailsSent: emailsSentCount,
-          bounceRate: emailsSentCount > 0 ? parseFloat(((bouncedCount / emailsSentCount) * 100).toFixed(2)) : 0,
+          bounceRate: emailsSentCount > 0 ? Number.parseFloat(((bouncedCount / emailsSentCount) * 100).toFixed(2)) : 0,
           bounced: bouncedCount,
-          replyRate: emailsSentCount > 0 ? parseFloat(((emailsRepliedCount / emailsSentCount) * 100).toFixed(2)) : 0,
+          replyRate: emailsSentCount > 0 ? Number.parseFloat(((emailsRepliedCount / emailsSentCount) * 100).toFixed(2)) : 0,
           replied: emailsRepliedCount,
           positiveReplies,
           meetingsBooked: emailMeetingsBooked
@@ -1062,8 +1062,8 @@ router.get('/', authenticate, async (req, res) => {
           totalDue,
           completed: followUpsCompleted,
           overdueCount,
-          completionRate: totalDue > 0 ? parseFloat(((followUpsCompleted / totalDue) * 100).toFixed(2)) : 100,
-          slaCompliance: parseFloat(slaCompliance.toFixed(2)),
+          completionRate: totalDue > 0 ? Number.parseFloat(((followUpsCompleted / totalDue) * 100).toFixed(2)) : 100,
+          slaCompliance: Number.parseFloat(slaCompliance.toFixed(2)),
           chartData: followUpMetrics[0]?.byDate ? (() => {
             const byDate = followUpMetrics[0].byDate;
             const dateMap = {};

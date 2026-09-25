@@ -147,11 +147,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {/* Keyword Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-keywords" className="block text-sm font-medium text-gray-700 mb-2">
                   Keyword
                   <span className="text-gray-400 font-normal ml-1">(searches in keywords field)</span>
                 </label>
                 <input
+                  id="filter-keywords"
                   type="text"
                   value={filters.keywords}
                   onChange={(e) => handleFilterChange('keywords', e.target.value)}
@@ -168,11 +169,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* City Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-city" className="block text-sm font-medium text-gray-700 mb-2">
                   City
                   <span className="text-gray-400 font-normal ml-1">(case-insensitive)</span>
                 </label>
                 <input
+                  id="filter-city"
                   type="text"
                   value={filters.city}
                   onChange={(e) => handleFilterChange('city', e.target.value)}
@@ -189,11 +191,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* State Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-state" className="block text-sm font-medium text-gray-700 mb-2">
                   State
                   <span className="text-gray-400 font-normal ml-1">(case-insensitive)</span>
                 </label>
                 <input
+                  id="filter-state"
                   type="text"
                   value={filters.state}
                   onChange={(e) => handleFilterChange('state', e.target.value)}
@@ -210,11 +213,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* Country Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-country" className="block text-sm font-medium text-gray-700 mb-2">
                   Country
                   <span className="text-gray-400 font-normal ml-1">(case-insensitive)</span>
                 </label>
                 <input
+                  id="filter-country"
                   type="text"
                   value={filters.country}
                   onChange={(e) => handleFilterChange('country', e.target.value)}
@@ -231,11 +235,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* Has Email Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-has-email" className="block text-sm font-medium text-gray-700 mb-2">
                   Has Email
                   <span className="text-gray-400 font-normal ml-1">(valid email format)</span>
                 </label>
                 <select
+                  id="filter-has-email"
                   value={filters.hasEmail}
                   onChange={(e) => handleFilterChange('hasEmail', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors cursor-pointer"
@@ -248,11 +253,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* Has LinkedIn Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-has-linkedin" className="block text-sm font-medium text-gray-700 mb-2">
                   Has LinkedIn
                   <span className="text-gray-400 font-normal ml-1">(person or company)</span>
                 </label>
                 <select
+                  id="filter-has-linkedin"
                   value={filters.hasLinkedIn}
                   onChange={(e) => handleFilterChange('hasLinkedIn', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors cursor-pointer"
@@ -265,11 +271,12 @@ export default function ContactFilter({ category, searchParam, onApplyFilters, o
 
               {/* Has Phone Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="filter-has-phone" className="block text-sm font-medium text-gray-700 mb-2">
                   Has Phone
                   <span className="text-gray-400 font-normal ml-1">(phone number available)</span>
                 </label>
                 <select
+                  id="filter-has-phone"
                   value={filters.hasPhone}
                   onChange={(e) => handleFilterChange('hasPhone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white transition-colors cursor-pointer"

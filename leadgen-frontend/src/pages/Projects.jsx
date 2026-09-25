@@ -89,7 +89,7 @@ export default function Projects() {
           meetingRate: data.pipeline?.conversion?.meetingRate || 0,
           sqlCount: data.pipeline?.conversion?.sql || 0,
           avgActivitiesPerProspect: data.overview.totalProspects > 0 
-            ? parseFloat((data.overview.totalActivities / data.overview.totalProspects).toFixed(1))
+            ? Number.parseFloat((data.overview.totalActivities / data.overview.totalProspects).toFixed(1))
             : 0
         }));
       }
@@ -282,6 +282,8 @@ export default function Projects() {
               </svg>
             </div>
             <input
+              id="projects-search"
+              aria-label="Search by name, company, email"
               type="text"
               placeholder="Search by name, company, email..."
               value={searchQuery}
@@ -291,6 +293,8 @@ export default function Projects() {
           </div>
           <div className="w-64">
             <select
+              id="projects-select-navigate"
+              aria-label="Select a project to navigate to"
               value=""
               onChange={(e) => {
                 if (e.target.value) {
@@ -400,8 +404,10 @@ export default function Projects() {
                       </div>
                     </td>
                     <td className="px-3 py-4" onClick={(e) => e.stopPropagation()}>
-                      <label className="relative inline-flex items-center cursor-pointer">
+                      <label htmlFor={`toggle-active-${project._id}`} className="relative inline-flex items-center cursor-pointer">
                         <input
+                          id={`toggle-active-${project._id}`}
+                          aria-label={`Toggle active status for ${project.companyName}`}
                           type="checkbox"
                           checked={project.status === 'active'}
                           onChange={(e) => handleToggleActive(e, project._id, project.status)}
@@ -503,11 +509,11 @@ export default function Projects() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Company Name</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Company Name</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.companyName || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Website</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Website</span>
                     <p className="text-sm text-gray-900 mt-1">
                       {viewModal.project.website ? (
                         <a href={viewModal.project.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -517,24 +523,24 @@ export default function Projects() {
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">City</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">City</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.city || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Country</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Country</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.country || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Industry</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Industry</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.industry || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Company Size</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Company Size</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.companySize || 'N/A'}</p>
                   </div>
                   {viewModal.project.companyDescription && (
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-gray-500 uppercase">Company Description</label>
+                      <span className="block text-xs font-medium text-gray-500 uppercase">Company Description</span>
                       <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{viewModal.project.companyDescription}</p>
                     </div>
                   )}
@@ -551,15 +557,15 @@ export default function Projects() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Full Name</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Full Name</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.contactPerson?.fullName || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Designation</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Designation</span>
                     <p className="text-sm text-gray-900 mt-1">{viewModal.project.contactPerson?.designation || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Email</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Email</span>
                     <p className="text-sm text-gray-900 mt-1">
                       {viewModal.project.contactPerson?.email ? (
                         <a href={`mailto:${viewModal.project.contactPerson.email}`} className="text-blue-600 hover:underline">
@@ -569,7 +575,7 @@ export default function Projects() {
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500 uppercase">Phone Number</label>
+                    <span className="block text-xs font-medium text-gray-500 uppercase">Phone Number</span>
                     <p className="text-sm text-gray-900 mt-1">
                       {viewModal.project.contactPerson?.phoneNumber ? (
                         <a href={`tel:${viewModal.project.contactPerson.phoneNumber}`} className="text-blue-600 hover:underline">
@@ -580,7 +586,7 @@ export default function Projects() {
                   </div>
                   {viewModal.project.contactPerson?.linkedInProfileUrl && (
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-gray-500 uppercase">LinkedIn Profile</label>
+                      <span className="block text-xs font-medium text-gray-500 uppercase">LinkedIn Profile</span>
                       <p className="text-sm text-gray-900 mt-1">
                         <a href={viewModal.project.contactPerson.linkedInProfileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                           {viewModal.project.contactPerson.linkedInProfileUrl}
@@ -603,7 +609,7 @@ export default function Projects() {
                   <div className="space-y-4">
                     {viewModal.project.campaignDetails.servicesOffered && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Services Offered</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Services Offered</span>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {viewModal.project.campaignDetails.servicesOffered.leadGeneration && (
                             <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">Lead Generation</span>
@@ -629,26 +635,26 @@ export default function Projects() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {viewModal.project.campaignDetails.leadQuotaCommitted > 0 && (
                         <div>
-                          <label className="text-xs font-medium text-gray-500 uppercase">Lead Quota Committed</label>
+                          <span className="block text-xs font-medium text-gray-500 uppercase">Lead Quota Committed</span>
                           <p className="text-sm text-gray-900 mt-1">{viewModal.project.campaignDetails.leadQuotaCommitted}</p>
                         </div>
                       )}
                       {viewModal.project.campaignDetails.startDate && (
                         <div>
-                          <label className="text-xs font-medium text-gray-500 uppercase">Start Date</label>
+                          <span className="block text-xs font-medium text-gray-500 uppercase">Start Date</span>
                           <p className="text-sm text-gray-900 mt-1">{formatDate(viewModal.project.campaignDetails.startDate)}</p>
                         </div>
                       )}
                       {viewModal.project.campaignDetails.endDate && (
                         <div>
-                          <label className="text-xs font-medium text-gray-500 uppercase">End Date</label>
+                          <span className="block text-xs font-medium text-gray-500 uppercase">End Date</span>
                           <p className="text-sm text-gray-900 mt-1">{formatDate(viewModal.project.campaignDetails.endDate)}</p>
                         </div>
                       )}
                     </div>
                     {viewModal.project.campaignDetails.expectationsFromUs && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Expectations From Us</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Expectations From Us</span>
                         <p className="text-sm text-gray-900 mt-1 whitespace-pre-wrap">{viewModal.project.campaignDetails.expectationsFromUs}</p>
                       </div>
                     )}
@@ -711,7 +717,7 @@ export default function Projects() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {viewModal.project.icpDefinition.targetIndustries && viewModal.project.icpDefinition.targetIndustries.length > 0 && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Target Industries</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Target Industries</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {Array.isArray(viewModal.project.icpDefinition.targetIndustries) 
                             ? viewModal.project.icpDefinition.targetIndustries.join(', ')
@@ -721,7 +727,7 @@ export default function Projects() {
                     )}
                     {viewModal.project.icpDefinition.targetJobTitles && viewModal.project.icpDefinition.targetJobTitles.length > 0 && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Target Job Titles</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Target Job Titles</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {Array.isArray(viewModal.project.icpDefinition.targetJobTitles)
                             ? viewModal.project.icpDefinition.targetJobTitles.join(', ')
@@ -731,7 +737,7 @@ export default function Projects() {
                     )}
                     {(viewModal.project.icpDefinition.companySizeMin > 0 || viewModal.project.icpDefinition.companySizeMax < 1000) && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Company Size Range</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Company Size Range</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {viewModal.project.icpDefinition.companySizeMin} - {viewModal.project.icpDefinition.companySizeMax} employees
                         </p>
@@ -739,7 +745,7 @@ export default function Projects() {
                     )}
                     {viewModal.project.icpDefinition.geographies && viewModal.project.icpDefinition.geographies.length > 0 && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Geographies</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Geographies</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {Array.isArray(viewModal.project.icpDefinition.geographies)
                             ? viewModal.project.icpDefinition.geographies.join(', ')
@@ -749,7 +755,7 @@ export default function Projects() {
                     )}
                     {viewModal.project.icpDefinition.keywords && viewModal.project.icpDefinition.keywords.length > 0 && (
                       <div>
-                        <label className="text-xs font-medium text-gray-500 uppercase">Keywords</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Keywords</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {Array.isArray(viewModal.project.icpDefinition.keywords)
                             ? viewModal.project.icpDefinition.keywords.join(', ')
@@ -759,7 +765,7 @@ export default function Projects() {
                     )}
                     {viewModal.project.icpDefinition.exclusionCriteria && viewModal.project.icpDefinition.exclusionCriteria.length > 0 && (
                       <div className="md:col-span-2">
-                        <label className="text-xs font-medium text-gray-500 uppercase">Exclusion Criteria</label>
+                        <span className="block text-xs font-medium text-gray-500 uppercase">Exclusion Criteria</span>
                         <p className="text-sm text-gray-900 mt-1">
                           {Array.isArray(viewModal.project.icpDefinition.exclusionCriteria)
                             ? viewModal.project.icpDefinition.exclusionCriteria.join(', ')
@@ -780,7 +786,7 @@ export default function Projects() {
                   Team Allocation
                 </h3>
                 <div>
-                  <label className="text-xs font-medium text-gray-500 uppercase">Assigned To</label>
+                  <span className="block text-xs font-medium text-gray-500 uppercase">Assigned To</span>
                   <p className="text-sm text-gray-900 mt-1">{viewModal.project.assignedTo || 'N/A'}</p>
                 </div>
               </div>

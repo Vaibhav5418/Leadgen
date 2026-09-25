@@ -163,7 +163,7 @@ export default function MonthlyReport() {
                      activity.emailDate ? new Date(activity.emailDate) : 
                      activity.linkedinDate ? new Date(activity.linkedinDate) :
                      (activity.createdAt ? new Date(activity.createdAt) : null);
-        if (date && !isNaN(date.getTime())) {
+        if (date && !Number.isNaN(date.getTime())) {
           periodSet.add(getMonthKey(date));
         }
       });
@@ -186,7 +186,7 @@ export default function MonthlyReport() {
         const monthIndexB = monthOrder.indexOf(monthB);
         
         if (yearA !== yearB) {
-          return parseInt(yearA) - parseInt(yearB);
+          return Number.parseInt(yearA) - Number.parseInt(yearB);
         }
         return monthIndexA - monthIndexB;
       });
@@ -200,7 +200,7 @@ export default function MonthlyReport() {
         const date = activity.callDate ? new Date(activity.callDate) : 
                      activity.emailDate ? new Date(activity.emailDate) : 
                      new Date(activity.createdAt);
-        if (date && !isNaN(date.getTime())) {
+        if (date && !Number.isNaN(date.getTime())) {
           const dayKey = getDayKey(date);
           const monthKey = getMonthKey(date);
           const monthName = getMonthName(date);
@@ -272,7 +272,7 @@ export default function MonthlyReport() {
         const monthIndexB = monthOrder.indexOf(monthB);
         
         if (yearA !== yearB) {
-          return parseInt(yearA) - parseInt(yearB);
+          return Number.parseInt(yearA) - Number.parseInt(yearB);
         }
         return monthIndexA - monthIndexB;
       });
@@ -316,11 +316,11 @@ export default function MonthlyReport() {
 
       // Group period by callDate (if present), but compute "earliest" by createdAt if possible
       const periodDate = a.callDate ? new Date(a.callDate) : (a.createdAt ? new Date(a.createdAt) : null);
-      if (!periodDate || isNaN(periodDate.getTime())) return;
+      if (!periodDate || Number.isNaN(periodDate.getTime())) return;
       const period = viewMode === 'day' ? getDayKey(periodDate) : getMonthKey(periodDate);
 
       const createdAtDate = a.createdAt ? new Date(a.createdAt) : null;
-      const time = createdAtDate && !isNaN(createdAtDate.getTime()) ? createdAtDate.getTime() : periodDate.getTime();
+      const time = createdAtDate && !Number.isNaN(createdAtDate.getTime()) ? createdAtDate.getTime() : periodDate.getTime();
 
       if (a.callNumber === '1st call') {
         const cur = earliestExplicit.get(contactIdStr);
@@ -425,15 +425,15 @@ export default function MonthlyReport() {
 
         const getPeriodForCall = (a) => {
           const periodDate = a.callDate ? new Date(a.callDate) : (a.createdAt ? new Date(a.createdAt) : null);
-          if (!periodDate || isNaN(periodDate.getTime())) return null;
+          if (!periodDate || Number.isNaN(periodDate.getTime())) return null;
           return viewMode === 'day' ? getDayKey(periodDate) : getMonthKey(periodDate);
         };
 
         const getRecencyTime = (a) => {
           const created = a.createdAt ? new Date(a.createdAt) : null;
-          if (created && !isNaN(created.getTime())) return created.getTime();
+          if (created && !Number.isNaN(created.getTime())) return created.getTime();
           const d = a.callDate ? new Date(a.callDate) : null;
-          return d && !isNaN(d.getTime()) ? d.getTime() : 0;
+          return d && !Number.isNaN(d.getTime()) ? d.getTime() : 0;
         };
 
         callActivities.forEach((activity) => {
@@ -607,7 +607,7 @@ export default function MonthlyReport() {
 
         allPeriods.forEach(period => {
           if (data[period] && data[period].emailsSent > 0) {
-            data[period].responseRate = parseFloat(((data[period].totalResponses / data[period].emailsSent) * 100).toFixed(2));
+            data[period].responseRate = Number.parseFloat(((data[period].totalResponses / data[period].emailsSent) * 100).toFixed(2));
           }
         });
       }
@@ -743,7 +743,7 @@ export default function MonthlyReport() {
                           a.emailDate ? new Date(a.emailDate) : 
                           a.linkedinDate ? new Date(a.linkedinDate) :
                           (a.createdAt ? new Date(a.createdAt) : null);
-      if (!activityDate || isNaN(activityDate.getTime())) return;
+      if (!activityDate || Number.isNaN(activityDate.getTime())) return;
 
       const activityPeriod = viewMode === 'day' ? getDayKey(activityDate) : getMonthKey(activityDate);
       const activityType = a.type;
@@ -844,9 +844,9 @@ export default function MonthlyReport() {
       if (channel === 'call') {
         const getRecencyTime = (a) => {
           const created = a.createdAt ? new Date(a.createdAt) : null;
-          if (created && !isNaN(created.getTime())) return created.getTime();
+          if (created && !Number.isNaN(created.getTime())) return created.getTime();
           const d = a.callDate ? new Date(a.callDate) : null;
-          return d && !isNaN(d.getTime()) ? d.getTime() : 0;
+          return d && !Number.isNaN(d.getTime()) ? d.getTime() : 0;
         };
 
         const latestCall = channelActivities.reduce((latest, a) => {
@@ -2168,12 +2168,12 @@ export default function MonthlyReport() {
                           
                           const getRecencyTime = (a) => {
                             const created = a?.createdAt ? new Date(a.createdAt) : null;
-                            if (created && !isNaN(created.getTime())) return created.getTime();
+                            if (created && !Number.isNaN(created.getTime())) return created.getTime();
                             const d = a?.callDate ? new Date(a.callDate)
                               : a?.emailDate ? new Date(a.emailDate)
                               : a?.linkedinDate ? new Date(a.linkedinDate)
                               : null;
-                            return d && !isNaN(d.getTime()) ? d.getTime() : 0;
+                            return d && !Number.isNaN(d.getTime()) ? d.getTime() : 0;
                           };
                           
                           const channelPeriodActivities = periodActivities.filter(a => {

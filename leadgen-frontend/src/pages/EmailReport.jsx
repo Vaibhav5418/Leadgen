@@ -128,7 +128,7 @@ export default function EmailReport() {
       const monthIndexB = monthOrder.indexOf(monthB);
       
       if (yearA !== yearB) {
-        return parseInt(yearA) - parseInt(yearB);
+        return Number.parseInt(yearA) - Number.parseInt(yearB);
       }
       return monthIndexA - monthIndexB;
     });
@@ -151,7 +151,7 @@ export default function EmailReport() {
       }
     });
 
-    const sortedYears = Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
+    const sortedYears = Array.from(years).sort((a, b) => Number.parseInt(a) - Number.parseInt(b));
     return sortedYears;
   };
 
@@ -351,7 +351,7 @@ export default function EmailReport() {
         datasets: [
           {
             label: 'Response Rate (%)',
-            data: labels.map(period => parseFloat(reportData[period]?.responseRate || 0)),
+            data: labels.map(period => Number.parseFloat(reportData[period]?.responseRate || 0)),
             borderColor: 'rgb(168, 85, 247)',
             backgroundColor: 'rgba(168, 85, 247, 0.1)',
             tension: 0.4,

@@ -196,10 +196,18 @@ export default function BulkImportModal({ isOpen, onClose, projectId, onImportSu
 
           {/* File Upload */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="bulk-file-upload" className="block text-sm font-medium text-gray-900 mb-2">
               Upload File
             </label>
             <div
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -213,6 +221,7 @@ export default function BulkImportModal({ isOpen, onClose, projectId, onImportSu
               }`}
             >
               <input
+                id="bulk-file-upload"
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.xlsx,.xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
@@ -240,10 +249,11 @@ export default function BulkImportModal({ isOpen, onClose, projectId, onImportSu
 
           {/* Assign To */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="bulk-assign-to" className="block text-sm font-medium text-gray-900 mb-2">
               Assign To
             </label>
             <input
+              id="bulk-assign-to"
               type="text"
               value={assignTo}
               onChange={(e) => setAssignTo(e.target.value)}
@@ -255,10 +265,11 @@ export default function BulkImportModal({ isOpen, onClose, projectId, onImportSu
 
           {/* Default Stage */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label htmlFor="bulk-default-stage" className="block text-sm font-medium text-gray-900 mb-2">
               Default Stage
             </label>
             <select
+              id="bulk-default-stage"
               value={defaultStage}
               onChange={(e) => setDefaultStage(e.target.value)}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white"

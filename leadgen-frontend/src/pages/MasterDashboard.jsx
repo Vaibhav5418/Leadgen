@@ -184,10 +184,10 @@ export default function MasterDashboard() {
   // Helper function to clamp values between 0-100 and handle NaN/Infinity
   const clampPercentage = (value) => {
     // Convert to number if it's a string
-    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    const numValue = typeof value === 'string' ? Number.parseFloat(value) : value;
     
     // Check for invalid values
-    if (typeof numValue !== 'number' || isNaN(numValue) || !isFinite(numValue) || numValue < 0) {
+    if (typeof numValue !== 'number' || Number.isNaN(numValue) || !Number.isFinite(numValue) || numValue < 0) {
       return 0;
     }
     
@@ -198,8 +198,8 @@ export default function MasterDashboard() {
   // Helper to ensure all chart data values are finite
   const sanitizeChartData = (dataArray) => {
     return dataArray.map(val => {
-      const num = typeof val === 'string' ? parseFloat(val) : val;
-      if (typeof num !== 'number' || isNaN(num) || !isFinite(num)) {
+      const num = typeof val === 'string' ? Number.parseFloat(val) : val;
+      if (typeof num !== 'number' || Number.isNaN(num) || !Number.isFinite(num)) {
         return 0;
       }
       return num;
@@ -230,7 +230,7 @@ export default function MasterDashboard() {
       label: 'Total Activities',
       data: (rankings?.teamLeaderboard || []).slice(0, 10).map(m => {
         const value = m?.totalActivities || 0;
-        return typeof value === 'number' && isFinite(value) ? value : 0;
+        return typeof value === 'number' && Number.isFinite(value) ? value : 0;
       }),
       backgroundColor: '#3B82F6',
       borderColor: '#2563EB',
@@ -267,7 +267,7 @@ export default function MasterDashboard() {
         linkedin?.messagesSent || 0,
         linkedin?.replies || 0,
         linkedin?.meetingsBooked || 0
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#0077B5', '#00A0DC', '#008CC9', '#006699', '#004D73'],
       borderColor: ['#005885', '#0077B5', '#006699', '#004D73', '#003D5C'],
       borderWidth: 2
@@ -281,7 +281,7 @@ export default function MasterDashboard() {
       data: [
         linkedin?.accepted || 0,
         Math.max(0, (linkedin?.connectionRequestsSent || 0) - (linkedin?.accepted || 0))
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#10B981', '#EF4444'],
       borderWidth: 2
     }]
@@ -298,7 +298,7 @@ export default function MasterDashboard() {
         coldCall?.decisionMakerConnects || 0,
         coldCall?.interested || 0,
         coldCall?.meetingsBooked || 0
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF', '#1E3A8A'],
       borderColor: ['#2563EB', '#1D4ED8', '#1E40AF', '#1E3A8A', '#1E3A8A'],
       borderWidth: 2
@@ -348,7 +348,7 @@ export default function MasterDashboard() {
         email?.replied || 0,
         email?.positiveReplies || 0,
         email?.meetingsBooked || 0
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6'],
       borderColor: ['#7C3AED', '#6D28D9', '#5B21B6', '#4C1D95'],
       borderWidth: 2
@@ -363,7 +363,7 @@ export default function MasterDashboard() {
         email?.replied || 0,
         email?.bounced || 0,
         Math.max(0, (email?.emailsSent || 0) - (email?.replied || 0) - (email?.bounced || 0))
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#10B981', '#EF4444', '#9CA3AF'],
       borderWidth: 2,
       borderColor: '#ffffff'
@@ -379,7 +379,7 @@ export default function MasterDashboard() {
         data: [
           executive?.totalTouchesThisWeek || 0,
           executive?.totalMeetingsBookedThisWeek || 0
-        ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+        ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
         backgroundColor: '#3B82F6',
         borderColor: '#2563EB',
         borderWidth: 2
@@ -389,7 +389,7 @@ export default function MasterDashboard() {
         data: [
           executive?.totalTouchesThisMonth || 0,
           executive?.totalMeetingsBookedThisMonth || 0
-        ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+        ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
         backgroundColor: '#10B981',
         borderColor: '#059669',
         borderWidth: 2
@@ -405,7 +405,7 @@ export default function MasterDashboard() {
         linkedin?.connectionRequestsSent || 0,
         coldCall?.callsMade || 0,
         email?.emailsSent || 0
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#0077B5', '#3B82F6', '#8B5CF6'],
       borderWidth: 2,
       borderColor: '#ffffff',
@@ -435,7 +435,7 @@ export default function MasterDashboard() {
         executive?.totalLeadsInPlay || 0,
         executive?.totalTouchesThisMonth || 0,
         executive?.totalMeetingsBookedThisMonth || 0
-      ].map(val => typeof val === 'number' && isFinite(val) ? val : 0),
+      ].map(val => typeof val === 'number' && Number.isFinite(val) ? val : 0),
       backgroundColor: ['#3B82F6', '#8B5CF6', '#10B981'],
       borderColor: ['#2563EB', '#7C3AED', '#059669'],
       borderWidth: 2
@@ -676,7 +676,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `${context.dataset.label}: ${value.toLocaleString()}`;
@@ -689,8 +689,8 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             }
@@ -772,7 +772,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `${context.label}: ${value.toLocaleString()}`;
@@ -785,8 +785,8 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             }
@@ -953,8 +953,8 @@ export default function MasterDashboard() {
                             },
                             afterBuildTicks: (scale) => {
                               scale.ticks = scale.ticks.filter(tick => {
-                                const val = typeof tick.value === 'number' ? tick.value : parseFloat(tick.value);
-                                return isFinite(val) && val >= 0 && val <= 100;
+                                const val = typeof tick.value === 'number' ? tick.value : Number.parseFloat(tick.value);
+                                return Number.isFinite(val) && val >= 0 && val <= 100;
                               });
                             }
                           },
@@ -1006,7 +1006,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `Activities: ${value}`;
@@ -1019,15 +1019,15 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             },
                             afterBuildTicks: (scale) => {
                               scale.ticks = scale.ticks.filter(tick => {
-                                const val = typeof tick.value === 'number' ? tick.value : parseFloat(tick.value);
-                                return isFinite(val) && val >= 0;
+                                const val = typeof tick.value === 'number' ? tick.value : Number.parseFloat(tick.value);
+                                return Number.isFinite(val) && val >= 0;
                               });
                             }
                           },
@@ -1395,7 +1395,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `${context.label}: ${value.toLocaleString()}`;
@@ -1408,8 +1408,8 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             }
@@ -1528,7 +1528,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `${context.label}: ${value.toLocaleString()}`;
@@ -1541,8 +1541,8 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             }
@@ -1674,7 +1674,7 @@ export default function MasterDashboard() {
                           tooltip: {
                             callbacks: {
                               label: (context) => {
-                                const value = typeof context.parsed.y === 'number' && isFinite(context.parsed.y) 
+                                const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) 
                                   ? context.parsed.y 
                                   : 0;
                                 return `${context.label}: ${value.toLocaleString()}`;
@@ -1687,8 +1687,8 @@ export default function MasterDashboard() {
                             beginAtZero: true,
                             ticks: {
                               callback: (value) => {
-                                const numValue = typeof value === 'number' ? value : parseFloat(value);
-                                return typeof numValue === 'number' && isFinite(numValue) ? Math.round(numValue) : 0;
+                                const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                                return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
                               },
                               stepSize: 1
                             }

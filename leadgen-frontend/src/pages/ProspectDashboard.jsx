@@ -809,13 +809,20 @@ export default function ProspectDashboard() {
             const funnelWidth = calculateWidth(index, stages.length);
             const actualWidth = maxValue > 0 ? (value / maxValue) * funnelWidth : 0;
             const isClickable = stage.clickable;
-            const hasData = value > 0;
             
             return (
               <div key={stage.key} className="relative w-full flex flex-col items-center">
                 {/* Funnel segment */}
                 <div 
+                  role={isClickable ? 'button' : undefined}
+                  tabIndex={isClickable ? 0 : undefined}
                   onClick={() => handleStageClick(stage)}
+                  onKeyDown={isClickable ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleStageClick(stage);
+                    }
+                  } : undefined}
                   className={`relative transition-all duration-300 ${
                     isClickable ? 'cursor-pointer hover:scale-[1.03] group' : 'cursor-default'
                   }`}
@@ -952,6 +959,7 @@ export default function ProspectDashboard() {
             </div>
             <div className="flex items-center gap-3">
               <select
+                aria-label="Filter analytics by project"
                 value={selectedProject}
                 onChange={(e) => handleProjectChange(e.target.value)}
                 className="px-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white min-w-[200px]"
@@ -2425,6 +2433,7 @@ export default function ProspectDashboard() {
       {/* Stage Data Modal - Outside main content container */}
       {selectedStage && (
         <div 
+          role="presentation"
           className="fixed inset-0 bg-black bg-opacity-50 z-[100] flex items-center justify-center p-4"
           onClick={() => {
             setSelectedStage(null);
@@ -2433,6 +2442,8 @@ export default function ProspectDashboard() {
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
         >
           <div 
+            role="dialog"
+            aria-modal="true"
             className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col relative z-[101]"
             onClick={(e) => e.stopPropagation()}
             style={{ position: 'relative', zIndex: 101 }}

@@ -579,8 +579,9 @@ export default function EmployeePerformance() {
           <div className="space-y-6">
             {/* Employee Selector */}
             <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Select Employee</label>
+              <label htmlFor="employee-select" className="block text-sm font-semibold text-gray-700 mb-3">Select Employee</label>
               <select
+                id="employee-select"
                 value={selectedEmployee}
                 onChange={(e) => setSelectedEmployee(e.target.value)}
                 className="w-full md:w-80 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium"
@@ -918,8 +919,16 @@ export default function EmployeePerformance() {
                   {currentEmployee.projects.map(project => (
                     <div
                       key={project.id}
+                      role="button"
+                      tabIndex={0}
                       className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                       onClick={() => navigate(`/projects/${project.id}`)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          navigate(`/projects/${project.id}`);
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <div>

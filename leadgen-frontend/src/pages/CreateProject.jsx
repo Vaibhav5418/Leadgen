@@ -324,10 +324,11 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Company Details</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="create-proj-company-name" className="block text-sm font-medium text-gray-700 mb-2">
                 Company Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="create-proj-company-name"
                 type="text"
                 value={formData.companyName}
                 onChange={(e) => updateFormData('companyName', e.target.value)}
@@ -337,8 +338,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-              <input
+              <label htmlFor="create-proj-website" className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+              <input id="create-proj-website"
                 type="url"
                 value={formData.website}
                 onChange={(e) => updateFormData('website', e.target.value)}
@@ -349,8 +350,8 @@ export default function CreateProject() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
-                <input
+                <label htmlFor="create-proj-city" className="block text-sm font-medium text-gray-700 mb-2">City</label>
+              <input id="create-proj-city"
                   type="text"
                   value={formData.city}
                   onChange={(e) => updateFormData('city', e.target.value)}
@@ -359,8 +360,8 @@ export default function CreateProject() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <input
+                <label htmlFor="create-proj-country" className="block text-sm font-medium text-gray-700 mb-2">Country</label>
+              <input id="create-proj-country"
                   type="text"
                   value={formData.country}
                   onChange={(e) => updateFormData('country', e.target.value)}
@@ -372,8 +373,8 @@ export default function CreateProject() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
-                <input
+                <label htmlFor="create-proj-industry" className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
+              <input id="create-proj-industry"
                   type="text"
                   value={formData.industry}
                   onChange={(e) => updateFormData('industry', e.target.value)}
@@ -382,8 +383,8 @@ export default function CreateProject() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Size</label>
-                <select
+                <label htmlFor="create-proj-company-size" className="block text-sm font-medium text-gray-700 mb-2">Company Size</label>
+              <select id="create-proj-company-size"
                   value={formData.companySize}
                   onChange={(e) => updateFormData('companySize', e.target.value)}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -400,8 +401,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Company Description</label>
-              <textarea
+              <label htmlFor="create-proj-company-desc" className="block text-sm font-medium text-gray-700 mb-2">Company Description</label>
+              <textarea id="create-proj-company-desc"
                 value={formData.companyDescription}
                 onChange={(e) => updateFormData('companyDescription', e.target.value)}
                 rows={4}
@@ -418,10 +419,11 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Contact Person</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="create-proj-contact-name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name <span className="text-red-500">*</span>
               </label>
               <input
+                id="create-proj-contact-name"
                 type="text"
                 value={formData.contactPerson.fullName}
                 onChange={(e) => updateNestedFormData('contactPerson', 'fullName', e.target.value)}
@@ -431,8 +433,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
-              <input
+              <label htmlFor="create-proj-designation" className="block text-sm font-medium text-gray-700 mb-2">Designation</label>
+              <input id="create-proj-designation"
                 type="text"
                 value={formData.contactPerson.designation}
                 onChange={(e) => updateNestedFormData('contactPerson', 'designation', e.target.value)}
@@ -443,8 +445,8 @@ export default function CreateProject() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input
+                <label htmlFor="create-proj-contact-email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input id="create-proj-contact-email"
                   type="email"
                   value={formData.contactPerson.email}
                   onChange={(e) => updateNestedFormData('contactPerson', 'email', e.target.value)}
@@ -453,8 +455,8 @@ export default function CreateProject() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
-                <input
+                <label htmlFor="create-proj-contact-phone" className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+              <input id="create-proj-contact-phone"
                   type="tel"
                   value={formData.contactPerson.phoneNumber}
                   onChange={(e) => updateNestedFormData('contactPerson', 'phoneNumber', e.target.value)}
@@ -465,8 +467,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile URL</label>
-              <input
+              <label htmlFor="create-proj-contact-linkedin" className="block text-sm font-medium text-gray-700 mb-2">LinkedIn Profile URL</label>
+              <input id="create-proj-contact-linkedin"
                 type="url"
                 value={formData.contactPerson.linkedInProfileUrl}
                 onChange={(e) => updateNestedFormData('contactPerson', 'linkedInProfileUrl', e.target.value)}
@@ -483,39 +485,31 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Campaign Details</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Services Offered</label>
+              <span className="block text-sm font-medium text-gray-700 mb-3">Services Offered</span>
               <div className="grid grid-cols-2 gap-4">
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.campaignDetails.servicesOffered.leadGeneration}
+                <label htmlFor="service-lead-gen" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="service-lead-gen" type="checkbox" checked={formData.campaignDetails.servicesOffered.leadGeneration}
                     onChange={(e) => updateServicesOffered('leadGeneration', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Lead Generation</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.campaignDetails.servicesOffered.marketResearch}
+                <label htmlFor="service-market-research" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="service-market-research" type="checkbox" checked={formData.campaignDetails.servicesOffered.marketResearch}
                     onChange={(e) => updateServicesOffered('marketResearch', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Market Research</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.campaignDetails.servicesOffered.appointmentSetting}
+                <label htmlFor="service-appt-setting" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="service-appt-setting" type="checkbox" checked={formData.campaignDetails.servicesOffered.appointmentSetting}
                     onChange={(e) => updateServicesOffered('appointmentSetting', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Appointment Setting</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.campaignDetails.servicesOffered.dataEnrichment}
+                <label htmlFor="service-data-enrichment" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="service-data-enrichment" type="checkbox" checked={formData.campaignDetails.servicesOffered.dataEnrichment}
                     onChange={(e) => updateServicesOffered('dataEnrichment', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
@@ -525,8 +519,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Expectations from Us</label>
-              <textarea
+              <label htmlFor="create-proj-expectations" className="block text-sm font-medium text-gray-700 mb-2">Expectations from Us</label>
+              <textarea id="create-proj-expectations"
                 value={formData.campaignDetails.expectationsFromUs}
                 onChange={(e) => updateNestedFormData('campaignDetails', 'expectationsFromUs', e.target.value)}
                 rows={4}
@@ -536,11 +530,11 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Lead Quota Committed</label>
-              <input
+              <label htmlFor="create-proj-lead-quota" className="block text-sm font-medium text-gray-700 mb-2">Lead Quota Committed</label>
+              <input id="create-proj-lead-quota"
                 type="number"
                 value={formData.campaignDetails.leadQuotaCommitted}
-                onChange={(e) => updateNestedFormData('campaignDetails', 'leadQuotaCommitted', parseInt(e.target.value) || 0)}
+                onChange={(e) => updateNestedFormData('campaignDetails', 'leadQuotaCommitted', Number.parseInt(e.target.value) || 0)}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="0"
                 min="0"
@@ -549,9 +543,10 @@ export default function CreateProject() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <label htmlFor="create-proj-start-date" className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
                 <div className="relative">
                   <input
+                    id="create-proj-start-date"
                     type="date"
                     value={formData.campaignDetails.startDate}
                     onChange={(e) => updateNestedFormData('campaignDetails', 'startDate', e.target.value)}
@@ -563,9 +558,10 @@ export default function CreateProject() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <label htmlFor="create-proj-end-date" className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
                 <div className="relative">
                   <input
+                    id="create-proj-end-date"
                     type="date"
                     value={formData.campaignDetails.endDate}
                     onChange={(e) => updateNestedFormData('campaignDetails', 'endDate', e.target.value)}
@@ -586,10 +582,11 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Channels</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">Channel Selection</label>
+              <span className="block text-sm font-medium text-gray-700 mb-3">Channel Selection</span>
               <div className="space-y-3">
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <label htmlFor="channel-linkedin" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
                   <input
+                    id="channel-linkedin"
                     type="checkbox"
                     checked={formData.channels.linkedInOutreach}
                     onChange={(e) => updateNestedFormData('channels', 'linkedInOutreach', e.target.checked)}
@@ -597,19 +594,15 @@ export default function CreateProject() {
                   />
                   <span className="text-sm text-gray-700">LinkedIn Outreach</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.channels.coldEmail}
+                <label htmlFor="channel-cold-email" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="channel-cold-email" type="checkbox" checked={formData.channels.coldEmail}
                     onChange={(e) => updateNestedFormData('channels', 'coldEmail', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
                   <span className="text-sm text-gray-700">Cold Email</span>
                 </label>
-                <label className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={formData.channels.coldCalling}
+                <label htmlFor="channel-cold-calling" className="flex items-center gap-3 p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input id="channel-cold-calling" type="checkbox" checked={formData.channels.coldCalling}
                     onChange={(e) => updateNestedFormData('channels', 'coldCalling', e.target.checked)}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
@@ -626,8 +619,8 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">ICP Definition</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Target Industries (comma-separated)</label>
-              <input
+              <label htmlFor="create-proj-target-industries" className="block text-sm font-medium text-gray-700 mb-2">Target Industries (comma-separated)</label>
+              <input id="create-proj-target-industries"
                 type="text"
                 value={formData.icpDefinition.targetIndustries}
                 onChange={(e) => updateNestedFormData('icpDefinition', 'targetIndustries', e.target.value)}
@@ -637,8 +630,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Target Job Titles (comma-separated)</label>
-              <input
+              <label htmlFor="create-proj-target-job-titles" className="block text-sm font-medium text-gray-700 mb-2">Target Job Titles (comma-separated)</label>
+              <input id="create-proj-target-job-titles"
                 type="text"
                 value={formData.icpDefinition.targetJobTitles}
                 onChange={(e) => updateNestedFormData('icpDefinition', 'targetJobTitles', e.target.value)}
@@ -649,22 +642,22 @@ export default function CreateProject() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Size Min</label>
-                <input
+                <label htmlFor="create-proj-size-min" className="block text-sm font-medium text-gray-700 mb-2">Company Size Min</label>
+              <input id="create-proj-size-min"
                   type="number"
                   value={formData.icpDefinition.companySizeMin}
-                  onChange={(e) => updateNestedFormData('icpDefinition', 'companySizeMin', parseInt(e.target.value) || 0)}
+                  onChange={(e) => updateNestedFormData('icpDefinition', 'companySizeMin', Number.parseInt(e.target.value) || 0)}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="0"
                   min="0"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Company Size Max</label>
-                <input
+                <label htmlFor="create-proj-size-max" className="block text-sm font-medium text-gray-700 mb-2">Company Size Max</label>
+              <input id="create-proj-size-max"
                   type="number"
                   value={formData.icpDefinition.companySizeMax}
-                  onChange={(e) => updateNestedFormData('icpDefinition', 'companySizeMax', parseInt(e.target.value) || 1000)}
+                  onChange={(e) => updateNestedFormData('icpDefinition', 'companySizeMax', Number.parseInt(e.target.value) || 1000)}
                   className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="1000"
                   min="0"
@@ -673,8 +666,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Geographies (comma-separated)</label>
-              <input
+              <label htmlFor="create-proj-geographies" className="block text-sm font-medium text-gray-700 mb-2">Geographies (comma-separated)</label>
+              <input id="create-proj-geographies"
                 type="text"
                 value={formData.icpDefinition.geographies}
                 onChange={(e) => updateNestedFormData('icpDefinition', 'geographies', e.target.value)}
@@ -684,8 +677,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Keywords (comma-separated)</label>
-              <input
+              <label htmlFor="create-proj-keywords" className="block text-sm font-medium text-gray-700 mb-2">Keywords (comma-separated)</label>
+              <input id="create-proj-keywords"
                 type="text"
                 value={formData.icpDefinition.keywords}
                 onChange={(e) => updateNestedFormData('icpDefinition', 'keywords', e.target.value)}
@@ -695,8 +688,8 @@ export default function CreateProject() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Exclusion Criteria (comma-separated)</label>
-              <input
+              <label htmlFor="create-proj-exclusions" className="block text-sm font-medium text-gray-700 mb-2">Exclusion Criteria (comma-separated)</label>
+              <input id="create-proj-exclusions"
                 type="text"
                 value={formData.icpDefinition.exclusionCriteria}
                 onChange={(e) => updateNestedFormData('icpDefinition', 'exclusionCriteria', e.target.value)}
@@ -713,8 +706,8 @@ export default function CreateProject() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Team Allocation</h2>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
-              <input
+              <label htmlFor="create-proj-assigned-to" className="block text-sm font-medium text-gray-700 mb-2">Assigned To</label>
+              <input id="create-proj-assigned-to"
                 type="text"
                 value={formData.assignedTo}
                 onChange={(e) => updateFormData('assignedTo', e.target.value)}
@@ -728,7 +721,7 @@ export default function CreateProject() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">Team Members</label>
+                <span className="block text-sm font-medium text-gray-700">Team Members</span>
                 <button
                   type="button"
                   onClick={() => {
@@ -760,6 +753,7 @@ export default function CreateProject() {
                   {formData.teamMembers.map((email, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <input
+                        aria-label={`Team member email ${index + 1}`}
                         type="email"
                         value={email}
                         onChange={(e) => {

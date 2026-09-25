@@ -850,10 +850,11 @@ export default function ActivityHistory() {
 
             <form onSubmit={handleSaveContact} className="p-5 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label htmlFor="contact-form-name" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Full Name
                 </label>
                 <input
+                  id="contact-form-name"
                   type="text"
                   required
                   value={contactForm.name}
@@ -864,10 +865,11 @@ export default function ActivityHistory() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label htmlFor="contact-form-company" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Company Name
                 </label>
                 <input
+                  id="contact-form-company"
                   type="text"
                   value={contactForm.company}
                   onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
@@ -878,10 +880,11 @@ export default function ActivityHistory() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="contact-form-email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                     Email Address
                   </label>
                   <input
+                    id="contact-form-email"
                     type="email"
                     value={contactForm.email}
                     onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
@@ -891,10 +894,11 @@ export default function ActivityHistory() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  <label htmlFor="contact-form-phone" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                     Phone Number
                   </label>
                   <input
+                    id="contact-form-phone"
                     type="text"
                     value={contactForm.phoneNumber}
                     onChange={(e) => setContactForm({ ...contactForm, phoneNumber: e.target.value })}
@@ -905,10 +909,11 @@ export default function ActivityHistory() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                <label htmlFor="contact-form-linkedin" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   LinkedIn Profile URL
                 </label>
                 <input
+                  id="contact-form-linkedin"
                   type="text"
                   value={contactForm.linkedInUrl}
                   onChange={(e) => setContactForm({ ...contactForm, linkedInUrl: e.target.value })}

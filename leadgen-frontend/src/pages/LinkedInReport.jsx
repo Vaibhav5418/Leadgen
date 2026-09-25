@@ -134,7 +134,7 @@ export default function LinkedInReport() {
       const monthIndexB = monthOrder.indexOf(monthB);
       
       if (yearA !== yearB) {
-        return parseInt(yearA) - parseInt(yearB);
+        return Number.parseInt(yearA) - Number.parseInt(yearB);
       }
       return monthIndexA - monthIndexB;
     });
@@ -163,7 +163,7 @@ export default function LinkedInReport() {
     years.add(getYearKey(new Date()));
 
     // Sort years chronologically
-    return Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
+    return Array.from(years).sort((a, b) => Number.parseInt(a) - Number.parseInt(b));
   };
 
   const calculateReportData = () => {

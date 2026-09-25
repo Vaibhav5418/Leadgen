@@ -107,6 +107,7 @@ export default function FunnelProjects() {
               </svg>
             </div>
             <input
+              aria-label="Search projects by name, company, or email"
               type="text"
               placeholder="Search projects by name, company, or email..."
               value={searchQuery}
@@ -172,7 +173,15 @@ export default function FunnelProjects() {
             {projects.map((project, index) => (
               <div
                 key={project._id}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/projects/${project._id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/projects/${project._id}`);
+                  }
+                }}
                 className={`group relative bg-white rounded-lg border border-slate-200 shadow-sm hover:shadow hover:border-slate-300 cursor-pointer transition-all duration-150 flex flex-col ${
                   mounted ? 'opacity-100' : 'opacity-0'
                 }`}

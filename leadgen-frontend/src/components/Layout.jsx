@@ -16,6 +16,7 @@ export default function Layout() {
       {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
+          role="presentation"
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />

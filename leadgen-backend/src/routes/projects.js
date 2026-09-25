@@ -903,8 +903,8 @@ router.get('/analytics', authenticate, async (req, res) => {
             count: item.count
           })),
           conversion: {
-            winRate: parseFloat(winRate),
-            meetingRate: parseFloat(meetingRate),
+            winRate: Number.parseFloat(winRate),
+            meetingRate: Number.parseFloat(meetingRate),
             total: conversionData.total,
             won: conversionData.won,
             lost: conversionData.lost,
@@ -995,8 +995,8 @@ router.get('/analytics', authenticate, async (req, res) => {
               count: item.count
             })),
             conversion: {
-              winRate: parseFloat(winRate),
-              meetingRate: parseFloat(meetingRate),
+              winRate: Number.parseFloat(winRate),
+              meetingRate: Number.parseFloat(meetingRate),
               total: conversionData.total,
               won: conversionData.won,
               lost: conversionData.lost,
@@ -2505,7 +2505,7 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
           stageDistribution: stageDistribution.map(item => ({
             stage: item._id,
             count: item.count,
-            avgPriority: item.avgPriority ? parseFloat(item.avgPriority.toFixed(2)) : 0
+            avgPriority: item.avgPriority ? Number.parseFloat(item.avgPriority.toFixed(2)) : 0
           }))
         },
         activities: {
@@ -2528,8 +2528,8 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
         },
         pipeline: {
           conversion: {
-            winRate: parseFloat(winRate),
-            meetingRate: parseFloat(meetingRate),
+            winRate: Number.parseFloat(winRate),
+            meetingRate: Number.parseFloat(meetingRate),
             total: conversionData.total,
             won: conversionData.won,
             lost: conversionData.lost,
@@ -4022,7 +4022,7 @@ router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, r
     let missedFollowups = 0;
     const followupContactIds = { today: [], tomorrow: [], missed: [] };
     latestCallByContact.forEach(({ nextActionDate }, contactIdStr) => {
-      if (!nextActionDate || isNaN(nextActionDate.getTime())) return;
+      if (!nextActionDate || Number.isNaN(nextActionDate.getTime())) return;
       const d = new Date(nextActionDate);
       d.setHours(0, 0, 0, 0);
       if (d >= today && d < tomorrow) {
@@ -4265,18 +4265,18 @@ router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, r
           // Legacy metrics (for backward compatibility)
           connectionRequestsSent,
           connectionsAccepted,
-          connectionAcceptanceRate: parseFloat(connectionAcceptanceRate),
+          connectionAcceptanceRate: Number.parseFloat(connectionAcceptanceRate),
           messagesSent,
           messageReplies,
-          messageReplyRate: parseFloat(messageReplyRate),
+          messageReplyRate: Number.parseFloat(messageReplyRate),
           meetingsBooked: linkedInMeetings
         },
         call: {
           callsMade,
           callsAnswered,
-          callAnswerRate: parseFloat(callAnswerRate),
+          callAnswerRate: Number.parseFloat(callAnswerRate),
           callsInterested,
-          callInterestedRate: parseFloat(callInterestedRate),
+          callInterestedRate: Number.parseFloat(callInterestedRate),
           meetingsBooked: callMeetings,
           // Total Calls = all activities (1st, 2nd, 3rd...) for unique prospects
           totalCallsCount,
@@ -4310,9 +4310,9 @@ router.get('/:id/kpi-metrics', authenticate, requireProjectAccess, async (req, r
           notInterested: emailNotInterested,
           // Legacy metrics (for backward compatibility)
           emailOpens,
-          emailOpenRate: parseFloat(emailOpenRate),
+          emailOpenRate: Number.parseFloat(emailOpenRate),
           emailReplies,
-          emailReplyRate: parseFloat(emailReplyRate),
+          emailReplyRate: Number.parseFloat(emailReplyRate),
           meetingsBooked: emailMeetings
         }
       }

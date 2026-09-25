@@ -160,7 +160,7 @@ export default function ColdCallingReport() {
       const monthIndexB = monthOrder.indexOf(monthB);
       
       if (yearA !== yearB) {
-        return parseInt(yearA) - parseInt(yearB);
+        return Number.parseInt(yearA) - Number.parseInt(yearB);
       }
       return monthIndexA - monthIndexB;
     });
