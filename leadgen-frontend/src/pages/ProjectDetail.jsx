@@ -1217,6 +1217,18 @@ export default function ProjectDetail() {
     });
   };
 
+  const refreshExpandedActivityData = async () => {
+    await fetchAllProjectActivities();
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await fetchImportedContacts(contactsPage);
+    await Promise.all(expandedContacts.map(async contactId => {
+      const contact = contacts.find(c => (c._id || c.name) === contactId);
+      if (contact) {
+        await fetchActivitiesForContact(contactId, contact.email, contact.name);
+      }
+    }));
+  };
+
   const handleCloseActivityModal = async (wasSaved = false) => {
     setActivityModal({
       isOpen: false,
@@ -1232,15 +1244,7 @@ export default function ProjectDetail() {
     });
     // Only refetch when user saved; avoid refetch on cancel so pagination state is preserved
     if (!wasSaved) return;
-    await fetchAllProjectActivities();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await fetchImportedContacts(contactsPage);
-    await Promise.all(expandedContacts.map(async contactId => {
-      const contact = contacts.find(c => (c._id || c.name) === contactId);
-      if (contact) {
-        await fetchActivitiesForContact(contactId, contact.email, contact.name);
-      }
-    }));
+    await refreshExpandedActivityData();
   };
 
   const handleCloseBulkActivityModal = async (wasSaved = false) => {
@@ -1250,15 +1254,7 @@ export default function ProjectDetail() {
     });
     setSelectedContacts(new Set());
     if (!wasSaved) return;
-    await fetchAllProjectActivities();
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await fetchImportedContacts(contactsPage);
-    await Promise.all(expandedContacts.map(async contactId => {
-      const contact = contacts.find(c => (c._id || c.name) === contactId);
-      if (contact) {
-        await fetchActivitiesForContact(contactId, contact.email, contact.name);
-      }
-    }));
+    await refreshExpandedActivityData();
   };
 
 
