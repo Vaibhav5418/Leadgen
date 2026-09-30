@@ -2,33 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import useReportData from '../hooks/useReportData';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import { standardChartOptions as chartOptions } from '../utils/chartOptions';
 import ReportLayout from '../components/reports/ReportLayout';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { barChartOptions } from '../utils/reportChartSetup';
 
 export default function ColdCallingReport() {
   const { id } = useParams();
@@ -49,6 +24,7 @@ export default function ColdCallingReport() {
     getYears,
     fetchData
   } = useReportData(id, 'call');
+  const [reportData, setReportData] = useState({});
 const calculateReportData = () => {
     const periods = viewMode === 'day' ? getDays() : getMonths();
     const data = {};
@@ -194,6 +170,10 @@ const calculateReportData = () => {
     setReportData(data);
   };
 
+  useEffect(() => {
+    calculateReportData();
+  }, [activities, contacts, viewMode]);
+
   const metrics = [
     // DRA Section
     { key: 'dataAllocated', label: 'Data Allocated', section: 'DRA', bold: false },
@@ -305,21 +285,6 @@ const calculateReportData = () => {
       }
     };
   }, [periods, reportData]);
-
-  const barChartOptions = {
-    ...chartOptions,
-    scales: {
-      ...chartOptions.scales,
-      x: {
-        ...chartOptions.scales.x,
-        stacked: true
-      },
-      y: {
-        ...chartOptions.scales.y,
-        stacked: true
-      }
-    }
-  };
 
   const charts = [
     { id: 'funnel', type: 'line', title: 'Calling Funnel', data: chartData.callingFunnel },

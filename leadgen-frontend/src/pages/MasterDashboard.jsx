@@ -35,6 +35,40 @@ let cachedMasterDashboard = null;
 let cachedMasterDashboardTimestamp = 0;
 const MASTER_DASHBOARD_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
+const commonFunnelChartOptions = {
+  responsive: true,
+  maintainAspectRatio: true,
+  aspectRatio: 2,
+  layout: { padding: { top: 10, bottom: 10 } },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      callbacks: {
+        label: (context) => {
+          const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) ? context.parsed.y : 0;
+          return `${context.label}: ${value.toLocaleString()}`;
+        }
+      }
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        callback: (value) => {
+          const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
+          return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
+        },
+        stepSize: 1
+      }
+    },
+    x: {
+      grid: { display: false },
+      ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } }
+    }
+  }
+};
+
 import KPICard from '../components/dashboards/KPICard';
 
 export default function MasterDashboard() {
@@ -59,43 +93,6 @@ export default function MasterDashboard() {
     };
 
     load();
-
-    
-  const commonFunnelChartOptions = {
-    responsive: true,
-    maintainAspectRatio: true,
-    aspectRatio: 2,
-    layout: {
-      padding: { top: 10, bottom: 10 }
-    },
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = typeof context.parsed.y === 'number' && Number.isFinite(context.parsed.y) ? context.parsed.y : 0;
-            return `${context.label}: ${value.toLocaleString()}`;
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: (value) => {
-            const numValue = typeof value === 'number' ? value : Number.parseFloat(value);
-            return typeof numValue === 'number' && Number.isFinite(numValue) ? Math.round(numValue) : 0;
-          },
-          stepSize: 1
-        }
-      },
-      x: {
-        grid: { display: false },
-        ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } }
-      }
-    }
-  };
 
   return () => {
       isMountedRef.current = false;

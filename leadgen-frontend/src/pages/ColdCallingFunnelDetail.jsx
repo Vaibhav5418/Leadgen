@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../api/axios';
 import FunnelLayout from '../components/funnels/FunnelLayout';
+import useFunnelResources from '../hooks/useFunnelResources';
 
 // Version: 2.0 - Updated funnel stages (10 stages)
 export default function ColdCallingFunnelDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [contacts, setContacts] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { project, contacts, activities, loading } = useFunnelResources(id, 'call');
   const [funnelData, setFunnelData] = useState({
     prospectData: 0,
     callsAttempted: 0,
@@ -23,62 +20,6 @@ export default function ColdCallingFunnelDetail() {
     sql: 0,
     won: 0
   });
-
-  useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id && (contacts.length > 0 || activities.length > 0)) {
-      calculateFunnelData();
-    } else if (id && contacts.length === 0 && activities.length === 0) {
-      // Initialize with zero values if no data
-      setFunnelData({
-        prospectData: 0,
-        callsAttempted: 0,
-        callsConnected: 0,
-        decisionMakerReached: 0,
-        interested: 0,
-        detailsShared: 0,
-        demoBooked: 0,
-        demoCompleted: 0,
-        sql: 0,
-        won: 0
-      });
-    }
-  }, [id, contacts, activities]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch project details
-      const projectResponse = await API.get(`/projects/${id}`);
-      if (projectResponse.data.success) {
-        setProject(projectResponse.data.data);
-      }
-
-      // Fetch project contacts
-      const contactsResponse = await API.get(`/projects/${id}/project-contacts`);
-      if (contactsResponse.data.success) {
-        setContacts(contactsResponse.data.data || []);
-      }
-
-      // Fetch all call activities for the project
-      const activitiesResponse = await API.get(`/activities/project/${id}?limit=10000`);
-      if (activitiesResponse.data.success) {
-        const allActivities = activitiesResponse.data.data || [];
-        const callActivities = allActivities.filter(a => a.type === 'call');
-        setActivities(callActivities);
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const calculateFunnelData = () => {
     console.log('Calculating funnel data...', { contactsCount: contacts.length, activitiesCount: activities.length });
@@ -192,6 +133,25 @@ export default function ColdCallingFunnelDetail() {
     });
     setFunnelData(data);
   };
+
+  useEffect(() => {
+    if (id && (contacts.length > 0 || activities.length > 0)) {
+      calculateFunnelData();
+    } else if (id && contacts.length === 0 && activities.length === 0) {
+      setFunnelData({
+        prospectData: 0,
+        callsAttempted: 0,
+        callsConnected: 0,
+        decisionMakerReached: 0,
+        interested: 0,
+        detailsShared: 0,
+        demoBooked: 0,
+        demoCompleted: 0,
+        sql: 0,
+        won: 0
+      });
+    }
+  }, [id, contacts, activities]);
 
   // Updated 10-stage funnel configuration
   const funnelRows = [

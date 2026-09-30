@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../api/axios';
 import FunnelLayout from '../components/funnels/FunnelLayout';
+import useFunnelResources from '../hooks/useFunnelResources';
 
 export default function LinkedInFunnelDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [project, setProject] = useState(null);
-  const [contacts, setContacts] = useState([]);
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { project, contacts, activities, loading } = useFunnelResources(id, 'linkedin');
   const [funnelData, setFunnelData] = useState({
     prospectData: 0,
     connectionSent: 0,
@@ -21,48 +18,6 @@ export default function LinkedInFunnelDetail() {
     completed: 0,
     sql: 0
   });
-
-  useEffect(() => {
-    if (id) {
-      fetchData();
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (contacts.length > 0 || activities.length > 0) {
-      calculateFunnelData();
-    }
-  }, [contacts, activities]);
-
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch project details
-      const projectResponse = await API.get(`/projects/${id}`);
-      if (projectResponse.data.success) {
-        setProject(projectResponse.data.data);
-      }
-
-      // Fetch project contacts
-      const contactsResponse = await API.get(`/projects/${id}/project-contacts`);
-      if (contactsResponse.data.success) {
-        setContacts(contactsResponse.data.data || []);
-      }
-
-      // Fetch all LinkedIn activities for the project
-      const activitiesResponse = await API.get(`/activities/project/${id}?limit=10000`);
-      if (activitiesResponse.data.success) {
-        const allActivities = activitiesResponse.data.data || [];
-        const linkedInActivities = allActivities.filter(a => a.type === 'linkedin');
-        setActivities(linkedInActivities);
-      }
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const calculateFunnelData = () => {
     const data = {
@@ -156,6 +111,10 @@ export default function LinkedInFunnelDetail() {
 
     setFunnelData(data);
   };
+
+  useEffect(() => {
+    if (contacts.length > 0 || activities.length > 0) calculateFunnelData();
+  }, [contacts, activities]);
 
   const funnelRows = [
     { key: 'prospectData', label: 'Prospect Data', description: 'Total prospects from this project' },

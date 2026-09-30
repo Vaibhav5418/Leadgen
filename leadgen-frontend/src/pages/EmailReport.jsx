@@ -2,33 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import useReportData from '../hooks/useReportData';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import { standardChartOptions as chartOptions } from '../utils/chartOptions';
 import ReportLayout from '../components/reports/ReportLayout';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+import { barChartOptions } from '../utils/reportChartSetup';
 
 export default function EmailReport() {
   const { id } = useParams();
@@ -47,6 +22,7 @@ export default function EmailReport() {
     getYears,
     fetchData
   } = useReportData(id, 'email');
+  const [reportData, setReportData] = useState({});
 
   const calculateReportData = () => {
     const periods = viewMode === 'month' ? getMonths() : getYears();
@@ -144,6 +120,10 @@ export default function EmailReport() {
 
     setReportData(data);
   };
+
+  useEffect(() => {
+    calculateReportData();
+  }, [activities, contacts, viewMode]);
 
   const metrics = [
     { key: 'emailsSent', label: 'Emails Sent', section: 'Email Activity', bold: true },
@@ -254,21 +234,6 @@ export default function EmailReport() {
       }
     };
   }, [periods, reportData]);
-
-  const barChartOptions = {
-    ...chartOptions,
-    scales: {
-      ...chartOptions.scales,
-      x: {
-        ...chartOptions.scales.x,
-        stacked: true
-      },
-      y: {
-        ...chartOptions.scales.y,
-        stacked: true
-      }
-    }
-  };
 
   const charts = [
     { id: 'funnel', type: 'line', title: 'Email Funnel', data: chartData.emailFunnel },
