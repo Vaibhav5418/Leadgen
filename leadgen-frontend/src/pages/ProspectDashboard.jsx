@@ -101,19 +101,19 @@ export default function ProspectDashboard() {
   }, [selectedStage]);
 
   useEffect(() => {
-    fetchProjects();
+    void fetchProjects();
   }, []);
 
   useEffect(() => {
-    fetchAnalytics();
+    void fetchAnalytics();
   }, [selectedProject]);
 
   useEffect(() => {
-    fetchTeamActivityData();
+    void fetchTeamActivityData();
   }, [selectedProject, teamTimeFilter]);
 
   useEffect(() => {
-    fetchTeamMemberFunnels();
+    void fetchTeamMemberFunnels();
   }, [selectedProject]);
 
   const fetchTeamMemberFunnels = async () => {
@@ -785,13 +785,13 @@ export default function ProspectDashboard() {
     const handleStageClick = (stage) => {
       // Always allow clicking on Prospect Data
       if (stage.key === 'prospectData') {
-        fetchStageData(stage.key, funnelType, data, memberId);
+        void fetchStageData(stage.key, funnelType, data, memberId);
         return;
       }
       
       // For other stages, check if they have data
       if (stage.clickable && (data[stage.key] || 0) > 0) {
-        fetchStageData(stage.key, funnelType, data, memberId);
+        void fetchStageData(stage.key, funnelType, data, memberId);
       } else if (stage.clickable) {
         setNotification({ type: 'info', message: `No records found for ${stage.label} stage` });
         setTimeout(() => setNotification(null), 3000);

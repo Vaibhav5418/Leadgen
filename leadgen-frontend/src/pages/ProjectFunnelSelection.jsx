@@ -10,7 +10,7 @@ export default function ProjectFunnelSelection() {
 
   useEffect(() => {
     if (id) {
-      fetchProject();
+      void fetchProject();
     }
   }, [id]);
 

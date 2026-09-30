@@ -158,17 +158,17 @@ export default function AdminPanel() {
 
   // Initial load
   useEffect(() => {
-    fetchDashboardStats();
+    void fetchDashboardStats();
   }, [fetchDashboardStats]);
 
   // Tab-dependent load
   useEffect(() => {
     if (activeTab === 'employees') {
-      fetchEmployees();
+      void fetchEmployees();
     } else if (activeTab === 'projects') {
-      fetchProjects();
+      void fetchProjects();
     } else if (activeTab === 'audit') {
-      fetchAuditLogs();
+      void fetchAuditLogs();
     }
   }, [activeTab, fetchEmployees, fetchProjects, fetchAuditLogs]);
 
@@ -189,8 +189,8 @@ export default function AdminPanel() {
       if (res.data?.success) {
         showToast(res.data.message || 'Role updated successfully', 'success');
         setRoleModalUser(null);
-        fetchEmployees();
-        fetchDashboardStats();
+        void fetchEmployees();
+        void fetchDashboardStats();
       }
     } catch (err) {
       console.error('Failed to update role:', err);
@@ -228,8 +228,8 @@ export default function AdminPanel() {
       if (res.data?.success) {
         showToast(res.data.message || 'Project assignments updated', 'success');
         setAssignProjectsUser(null);
-        fetchEmployees();
-        fetchDashboardStats();
+        void fetchEmployees();
+        void fetchDashboardStats();
       }
     } catch (err) {
       console.error('Failed to assign projects:', err);
@@ -267,8 +267,8 @@ export default function AdminPanel() {
       if (res.data?.success) {
         showToast(res.data.message || 'Project team updated successfully', 'success');
         setProjectMembersModal(null);
-        fetchProjects();
-        fetchDashboardStats();
+        void fetchProjects();
+        void fetchDashboardStats();
       }
     } catch (err) {
       console.error('Failed to assign members to project:', err);
@@ -287,8 +287,8 @@ export default function AdminPanel() {
       if (res.data?.success) {
         showToast(res.data.message || 'Team member removed', 'success');
         setConfirmDeleteMember(null);
-        fetchProjects();
-        fetchDashboardStats();
+        void fetchProjects();
+        void fetchDashboardStats();
       }
     } catch (err) {
       console.error('Failed to remove member from project:', err);
@@ -388,10 +388,10 @@ export default function AdminPanel() {
             {/* Quick Refresh Button */}
             <button
               onClick={() => {
-                fetchDashboardStats();
-                if (activeTab === 'employees') fetchEmployees();
-                if (activeTab === 'projects') fetchProjects();
-                if (activeTab === 'audit') fetchAuditLogs();
+                void fetchDashboardStats();
+                if (activeTab === 'employees') void fetchEmployees();
+                if (activeTab === 'projects') void fetchProjects();
+                if (activeTab === 'audit') void fetchAuditLogs();
               }}
               className="flex items-center gap-2 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition font-medium text-xs shadow-2xs"
             >

@@ -43,14 +43,14 @@ export default function useReportData(projectId, activityType) {
 
   useEffect(() => {
     if (projectId) {
-      fetchData();
+      void fetchData();
     }
   }, [projectId]);
 
   useEffect(() => {
     const handleFocus = () => {
       if (projectId && !loading) {
-        fetchData();
+        void fetchData();
       }
     };
     window.addEventListener('focus', handleFocus);
@@ -132,7 +132,7 @@ export default function useReportData(projectId, activityType) {
       const [monthA, yearA] = a.split(" '");
       const [monthB, yearB] = b.split(" '");
       const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB);
+      if (yearA !== yearB) return Number.parseInt(yearA, 10) - Number.parseInt(yearB, 10);
       return monthOrder.indexOf(monthA) - monthOrder.indexOf(monthB);
     });
   };
@@ -153,7 +153,7 @@ export default function useReportData(projectId, activityType) {
       }
     });
 
-    return Array.from(years).sort();
+    return Array.from(years).sort((a, b) => Number(a) - Number(b));
   };
 
   return {

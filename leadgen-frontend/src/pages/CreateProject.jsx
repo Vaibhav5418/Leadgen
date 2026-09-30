@@ -197,7 +197,7 @@ export default function CreateProject() {
       }
     };
 
-    fetchProject();
+    void fetchProject();
   }, [id, isEditMode]);
 
   const validateStep = (step) => {

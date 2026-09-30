@@ -530,7 +530,7 @@ export default function ProjectDetail() {
       }
 
       // Always refresh in background to keep data up to date
-      fetchProject().then(() => {
+      void fetchProject().then(() => {
         // Get page from URL params, then optional localStorage, then default 1
         const pageFromUrl = searchParams.get('page');
         let initialPage = pageFromUrl ? Number.parseInt(pageFromUrl, 10) : 1;
@@ -556,7 +556,7 @@ export default function ProjectDetail() {
         }
 
         // Fetch contacts, activities, and KPI metrics in parallel for better performance
-        Promise.all([
+        void Promise.all([
         fetchAllProjectActivities().catch(err => {
           console.error('Error fetching activities:', err);
           }),
@@ -566,7 +566,11 @@ export default function ProjectDetail() {
           fetchKpiMetrics().catch(err => {
             console.error('Error fetching KPI metrics:', err);
           })
-        ]);
+        ]).catch(error => {
+          console.error('Error refreshing project details:', error);
+        });
+      }, error => {
+        console.error('Error refreshing project:', error);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -641,7 +645,7 @@ export default function ProjectDetail() {
     setSearchParams(newParams, { replace: true });
 
     // Fetch contacts with search query (backend handles filtering)
-    fetchImportedContacts(1);
+    void fetchImportedContacts(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearchQuery, id]);
 
@@ -676,7 +680,7 @@ export default function ProjectDetail() {
           setContactsPage(pageNum);
           // Only fetch when using API pagination (no filters/search)
           if (!hasFiltersOrSearch) {
-            fetchImportedContacts(pageNum);
+            void fetchImportedContacts(pageNum);
           }
         }
       }, 200);
@@ -704,7 +708,7 @@ export default function ProjectDetail() {
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('page');
       setSearchParams(newParams, { replace: true });
-      fetchImportedContacts(1);
+      void fetchImportedContacts(1);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quickFilter, filterStatus, filterActionDate, filterActionDateFrom, filterActionDateTo, filterLastInteraction, filterLastInteractionFrom, filterLastInteractionTo, filterImportDate, filterImportDateFrom, filterImportDateTo, filterNoActivity, filterMatchType, filterKpi, id]);
@@ -854,7 +858,7 @@ export default function ProjectDetail() {
 
     // Fetch immediately when not filtering (don't wait for URL effect)
     if (!hasFiltersOrSearch) {
-      fetchImportedContacts(newPage);
+      void fetchImportedContacts(newPage);
     }
 
     // Clear the flag after a short delay
@@ -988,7 +992,7 @@ export default function ProjectDetail() {
           allProjectActivities: activities,
         };
         // Refresh KPI metrics when activities are updated
-        fetchKpiMetrics();
+        await fetchKpiMetrics();
       }
     } catch (err) {
       console.error('Error fetching project activities:', err);
@@ -1179,7 +1183,7 @@ export default function ProjectDetail() {
       setExpandedContacts(prev => new Set(prev).add(contactId));
       });
       // Fetch activities asynchronously - don't block UI
-      fetchActivitiesForContact(contactId, contactEmail, contactName).catch(err => {
+      void fetchActivitiesForContact(contactId, contactEmail, contactName).catch(err => {
         console.error('Error fetching activities:', err);
       });
     }
@@ -1230,13 +1234,13 @@ export default function ProjectDetail() {
     if (!wasSaved) return;
     await fetchAllProjectActivities();
     await new Promise(resolve => setTimeout(resolve, 100));
-    fetchImportedContacts(contactsPage);
-    expandedContacts.forEach(contactId => {
+    await fetchImportedContacts(contactsPage);
+    await Promise.all(expandedContacts.map(async contactId => {
       const contact = contacts.find(c => (c._id || c.name) === contactId);
       if (contact) {
-        fetchActivitiesForContact(contactId, contact.email, contact.name);
+        await fetchActivitiesForContact(contactId, contact.email, contact.name);
       }
-    });
+    }));
   };
 
   const handleCloseBulkActivityModal = async (wasSaved = false) => {
@@ -1248,13 +1252,13 @@ export default function ProjectDetail() {
     if (!wasSaved) return;
     await fetchAllProjectActivities();
     await new Promise(resolve => setTimeout(resolve, 100));
-    fetchImportedContacts(contactsPage);
-    expandedContacts.forEach(contactId => {
+    await fetchImportedContacts(contactsPage);
+    await Promise.all(expandedContacts.map(async contactId => {
       const contact = contacts.find(c => (c._id || c.name) === contactId);
       if (contact) {
-        fetchActivitiesForContact(contactId, contact.email, contact.name);
+        await fetchActivitiesForContact(contactId, contact.email, contact.name);
       }
-    });
+    }));
   };
 
 
@@ -5211,8 +5215,9 @@ export default function ProjectDetail() {
         onClose={() => setBulkImportModal(false)}
         projectId={id}
         onImportSuccess={() => {
-          fetchImportedContacts(1);
-          fetchAllProjectActivities();
+        void Promise.all([fetchImportedContacts(1), fetchAllProjectActivities()]).catch(error => {
+          console.error('Error refreshing after import:', error);
+        });
         }}
       />
 

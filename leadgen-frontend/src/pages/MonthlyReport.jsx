@@ -55,7 +55,7 @@ export default function MonthlyReport() {
       setReportData(cached.reportData || {});
       setLoading(false);
     } else {
-      fetchData();
+      void fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);

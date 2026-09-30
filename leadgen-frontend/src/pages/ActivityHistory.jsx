@@ -141,7 +141,7 @@ export default function ActivityHistory() {
   }, [contactId, projectId]);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
   // Navigate back
@@ -242,7 +242,7 @@ export default function ActivityHistory() {
       lastActivity: null
     });
     if (shouldRefresh) {
-      fetchData();
+      void fetchData();
       showToast('Activity saved successfully!');
     }
   };

@@ -40,7 +40,7 @@ export default function ProjectDashboard() {
   const [dateRange, setDateRange] = useState('30d');
 
   useEffect(() => {
-    fetchAnalytics();
+    void fetchAnalytics();
   }, [dateRange]);
 
   const fetchAnalytics = async () => {

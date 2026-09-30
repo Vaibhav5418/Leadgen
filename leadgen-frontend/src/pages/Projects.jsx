@@ -26,8 +26,8 @@ export default function Projects() {
   const [viewModal, setViewModal] = useState({ isOpen: false, project: null });
 
   useEffect(() => {
-    fetchProjects();
-    fetchAnalytics();
+    void fetchProjects();
+    void fetchAnalytics();
   }, [searchQuery, filterStage, filterStatus, quickFilter]);
 
   const fetchProjects = async () => {

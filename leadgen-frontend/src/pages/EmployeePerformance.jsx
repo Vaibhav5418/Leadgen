@@ -95,7 +95,7 @@ export default function EmployeePerformance() {
       }
     };
 
-    load();
+    void load();
     return () => controller.abort();
   }, [timeFilter, fetchEmployeePerformance, selectedEmployee]);
 
@@ -108,7 +108,7 @@ export default function EmployeePerformance() {
       });
       
       // Refresh the current view
-      fetchEmployeePerformance();
+      void fetchEmployeePerformance();
     };
 
     // Listen for the custom event

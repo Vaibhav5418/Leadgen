@@ -137,7 +137,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
       
       // If edit mode, fetch the activity data
       if (editMode && activityId) {
-        fetchActivityData();
+        void fetchActivityData();
       } else if (lastActivity) {
         // Pre-fill form with the most recent activity data
         const activity = lastActivity;
@@ -170,7 +170,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
 
         // If lastActivity is not of the same type, fetch the most recent activity of the same type for date pre-filling
         if (activity.type !== type) {
-          fetchLastActivityByType().then(lastActivityByType => {
+          void fetchLastActivityByType().then(lastActivityByType => {
             if (lastActivityByType) {
               setFormData(prev => {
                 const updated = { ...prev };
@@ -185,6 +185,8 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                 return updated;
               });
             }
+          }).catch(error => {
+            console.error('Error pre-filling activity date:', error);
           });
         }
       } else {
@@ -206,7 +208,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
         });
 
         // Fetch the most recent activity of the same type to pre-fill the date
-        fetchLastActivityByType().then(lastActivityByType => {
+        void fetchLastActivityByType().then(lastActivityByType => {
           if (lastActivityByType) {
             setFormData(prev => {
               const updated = { ...prev };
@@ -221,6 +223,8 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
               return updated;
             });
           }
+        }).catch(error => {
+          console.error('Error pre-filling activity date:', error);
         });
       }
     } else if (!isOpen) {

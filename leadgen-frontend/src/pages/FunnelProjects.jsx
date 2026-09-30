@@ -12,7 +12,7 @@ export default function FunnelProjects() {
 
   useEffect(() => {
     setMounted(true);
-    fetchProjects();
+    void fetchProjects();
   }, [searchQuery]);
 
   const fetchProjects = async () => {

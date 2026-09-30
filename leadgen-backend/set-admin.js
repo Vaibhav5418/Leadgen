@@ -31,5 +31,5 @@ async function setAdmin() {
   }
 }
 
-setAdmin();
+void setAdmin();
 

@@ -92,7 +92,7 @@ export default function MasterDashboard() {
       }
     };
 
-    load();
+    void load();
 
   return () => {
       isMountedRef.current = false;
