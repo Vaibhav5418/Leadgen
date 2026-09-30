@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import ReportLayout from '../components/reports/ReportLayout';
 import { barChartOptions } from '../utils/reportChartSetup';
+import { buildMeetingPipelineChart } from '../utils/reportChartData';
 
 export default function EmailReport() {
   const { id } = useParams();
@@ -199,26 +200,7 @@ export default function EmailReport() {
           }
         ]
       },
-      meetingPipeline: {
-        labels,
-        datasets: [
-          {
-            label: 'Meeting Proposed',
-            data: labels.map(period => reportData[period]?.meetingProposed || 0),
-            backgroundColor: 'rgba(251, 191, 36, 0.8)',
-          },
-          {
-            label: 'Meeting Scheduled',
-            data: labels.map(period => reportData[period]?.meetingScheduled || 0),
-            backgroundColor: 'rgba(6, 182, 212, 0.8)',
-          },
-          {
-            label: 'Meeting Completed',
-            data: labels.map(period => reportData[period]?.meetingCompleted || 0),
-            backgroundColor: 'rgba(34, 197, 94, 0.8)',
-          }
-        ]
-      },
+      meetingPipeline: buildMeetingPipelineChart(labels, reportData, 'rgba(6, 182, 212, 0.8)'),
       responseRate: {
         labels,
         datasets: [

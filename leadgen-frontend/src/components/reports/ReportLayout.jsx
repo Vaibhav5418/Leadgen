@@ -1,6 +1,30 @@
 import React from 'react';
 import { Line, Bar } from 'react-chartjs-2';
 import { standardChartOptions as chartOptions } from '../../utils/chartOptions';
+function ReportMetricRow({ metric, periods, reportData }) {
+  const rowClass = metric.highlight
+    ? (metric.highlightDark ? 'bg-green-200' : 'bg-green-50')
+    : 'hover:bg-gray-50';
+  const labelClass = 'px-6 py-4 whitespace-nowrap text-sm border-r border-gray-200 '
+    + (metric.bold ? 'font-bold text-gray-900' : 'text-gray-700')
+    + (metric.highlightDark ? ' bg-green-200' : '');
+  const valueClass = 'px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-200 last:border-r-0 '
+    + (metric.bold ? 'font-semibold text-gray-900' : 'text-gray-700');
+
+  return (
+    <tr className={rowClass + ' transition-colors duration-150'}>
+      <td className={labelClass}>{metric.label}</td>
+      {periods.map((period) => (
+        <td key={period} className={valueClass}>
+          {metric.isPercentage
+            ? String(reportData[period]?.[metric.key] || 0) + '%'
+            : (reportData[period]?.[metric.key] || 0)}
+        </td>
+      ))}
+    </tr>
+  );
+}
+
 
 export default function ReportLayout({
   loading,
@@ -172,73 +196,13 @@ export default function ReportLayout({
                         </td>
                       </tr>
                       {metrics.filter(m => m.section === sectionName).map((metric) => (
-                        <tr
-                          key={metric.key}
-                          className={`${
-                            metric.highlight
-                              ? metric.highlightDark 
-                                ? 'bg-green-200' 
-                                : 'bg-green-50'
-                              : 'hover:bg-gray-50'
-                          } transition-colors duration-150`}
-                        >
-                          <td className={`px-6 py-4 whitespace-nowrap text-sm border-r border-gray-200 ${
-                            metric.bold ? 'font-bold text-gray-900' : 'text-gray-700'
-                          } ${metric.highlightDark ? 'bg-green-200' : ''}`}>
-                            {metric.label}
-                          </td>
-                          {periods.map((period) => (
-                            <td
-                              key={period}
-                              className={`px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-200 last:border-r-0 ${
-                                metric.bold
-                                  ? 'font-semibold text-gray-900'
-                                  : 'text-gray-700'
-                              }`}
-                            >
-                              {metric.isPercentage 
-                                ? `${reportData[period]?.[metric.key] || 0}%`
-                                : (reportData[period]?.[metric.key] || 0)
-                              }
-                            </td>
-                          ))}
-                        </tr>
+                        <ReportMetricRow key={metric.key} metric={metric} periods={periods} reportData={reportData} />
                       ))}
                     </React.Fragment>
                   ))}
                   {/* Case where metrics have no section */}
                   {metrics.filter(m => !m.section).map((metric) => (
-                    <tr
-                      key={metric.key}
-                      className={`${
-                        metric.highlight
-                          ? metric.highlightDark 
-                            ? 'bg-green-200' 
-                            : 'bg-green-50'
-                          : 'hover:bg-gray-50'
-                      } transition-colors duration-150`}
-                    >
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm border-r border-gray-200 ${
-                        metric.bold ? 'font-bold text-gray-900' : 'text-gray-700'
-                      } ${metric.highlightDark ? 'bg-green-200' : ''}`}>
-                        {metric.label}
-                      </td>
-                      {periods.map((period) => (
-                        <td
-                          key={period}
-                          className={`px-4 py-4 whitespace-nowrap text-sm text-center border-r border-gray-200 last:border-r-0 ${
-                            metric.bold
-                              ? 'font-semibold text-gray-900'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {metric.isPercentage 
-                            ? `${reportData[period]?.[metric.key] || 0}%`
-                            : (reportData[period]?.[metric.key] || 0)
-                          }
-                        </td>
-                      ))}
-                    </tr>
+                    <ReportMetricRow key={metric.key} metric={metric} periods={periods} reportData={reportData} />
                   ))}
                 </tbody>
               </table>

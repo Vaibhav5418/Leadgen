@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import ReportLayout from '../components/reports/ReportLayout';
 import { barChartOptions } from '../utils/reportChartSetup';
+import { buildMeetingPipelineChart } from '../utils/reportChartData';
 
 export default function LinkedInReport() {
   const { id } = useParams();
@@ -220,26 +221,7 @@ const calculateReportData = () => {
           }
         ]
       },
-      meetingPipeline: {
-        labels,
-        datasets: [
-          {
-            label: 'Meeting Proposed',
-            data: labels.map(period => reportData[period]?.meetingProposed || 0),
-            backgroundColor: 'rgba(251, 191, 36, 0.8)',
-          },
-          {
-            label: 'Meeting Scheduled',
-            data: labels.map(period => reportData[period]?.meetingScheduled || 0),
-            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-          },
-          {
-            label: 'Meeting Completed',
-            data: labels.map(period => reportData[period]?.meetingCompleted || 0),
-            backgroundColor: 'rgba(34, 197, 94, 0.8)',
-          }
-        ]
-      },
+      meetingPipeline: buildMeetingPipelineChart(labels, reportData, 'rgba(59, 130, 246, 0.8)'),
       conversationsStatus: {
         labels,
         datasets: [
