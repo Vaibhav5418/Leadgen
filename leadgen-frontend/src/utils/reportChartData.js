@@ -1,3 +1,31 @@
+export function buildLineChart(labels, reportData, series) {
+  return {
+    labels,
+    datasets: series.map(({ key, label, borderColor, backgroundColor, transform }) => ({
+      label,
+      data: labels.map(period => {
+        const value = reportData[period]?.[key] || 0;
+        return transform ? transform(value) : value;
+      }),
+      borderColor,
+      backgroundColor,
+      tension: 0.4,
+      fill: true
+    }))
+  };
+}
+
+export function buildBarChart(labels, reportData, series) {
+  return {
+    labels,
+    datasets: series.map(({ key, label, backgroundColor }) => ({
+      label,
+      data: labels.map(period => reportData[period]?.[key] || 0),
+      backgroundColor
+    }))
+  };
+}
+
 export function buildMeetingPipelineChart(labels, reportData, scheduledColor) {
   const values = (key) => labels.map(period => reportData[period]?.[key] || 0);
 

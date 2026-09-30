@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import ReportLayout from '../components/reports/ReportLayout';
 import { barChartOptions } from '../utils/reportChartSetup';
-import { buildMeetingPipelineChart } from '../utils/reportChartData';
+import { buildBarChart, buildLineChart, buildMeetingPipelineChart } from '../utils/reportChartData';
 
 export default function EmailReport() {
   const { id } = useParams();
@@ -150,70 +150,22 @@ export default function EmailReport() {
     
     return {
       emailFunnel: {
-        labels,
-        datasets: [
-          {
-            label: 'Emails Sent',
-            data: labels.map(period => reportData[period]?.emailsSent || 0),
-            borderColor: 'rgb(59, 130, 246)',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4,
-            fill: true,
-          },
-          {
-            label: 'Total Responses',
-            data: labels.map(period => reportData[period]?.totalResponses || 0),
-            borderColor: 'rgb(34, 197, 94)',
-            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-            tension: 0.4,
-            fill: true,
-          }
-        ]
+        ...buildLineChart(labels, reportData, [
+          { key: 'emailsSent', label: 'Emails Sent', borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)' },
+          { key: 'totalResponses', label: 'Total Responses', borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.1)' }
+        ])
       },
-      responseBreakdown: {
-        labels,
-        datasets: [
-          {
-            label: 'No Reply',
-            data: labels.map(period => reportData[period]?.noReply || 0),
-            backgroundColor: 'rgba(156, 163, 175, 0.8)',
-          },
-          {
-            label: 'Not Interested',
-            data: labels.map(period => reportData[period]?.notInterested || 0),
-            backgroundColor: 'rgba(239, 68, 68, 0.8)',
-          },
-          {
-            label: 'Interested',
-            data: labels.map(period => reportData[period]?.interested || 0),
-            backgroundColor: 'rgba(34, 197, 94, 0.8)',
-          },
-          {
-            label: 'Meeting Proposed',
-            data: labels.map(period => reportData[period]?.meetingProposed || 0),
-            backgroundColor: 'rgba(251, 191, 36, 0.8)',
-          },
-          {
-            label: 'Meeting Scheduled',
-            data: labels.map(period => reportData[period]?.meetingScheduled || 0),
-            backgroundColor: 'rgba(6, 182, 212, 0.8)',
-          }
-        ]
-      },
+      responseBreakdown: buildBarChart(labels, reportData, [
+        { key: 'noReply', label: 'No Reply', backgroundColor: 'rgba(156, 163, 175, 0.8)' },
+        { key: 'notInterested', label: 'Not Interested', backgroundColor: 'rgba(239, 68, 68, 0.8)' },
+        { key: 'interested', label: 'Interested', backgroundColor: 'rgba(34, 197, 94, 0.8)' },
+        { key: 'meetingProposed', label: 'Meeting Proposed', backgroundColor: 'rgba(251, 191, 36, 0.8)' },
+        { key: 'meetingScheduled', label: 'Meeting Scheduled', backgroundColor: 'rgba(6, 182, 212, 0.8)' }
+      ]),
       meetingPipeline: buildMeetingPipelineChart(labels, reportData, 'rgba(6, 182, 212, 0.8)'),
-      responseRate: {
-        labels,
-        datasets: [
-          {
-            label: 'Response Rate (%)',
-            data: labels.map(period => Number.parseFloat(reportData[period]?.responseRate || 0)),
-            borderColor: 'rgb(168, 85, 247)',
-            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-            tension: 0.4,
-            fill: true,
-          }
-        ]
-      }
+      responseRate: buildLineChart(labels, reportData, [
+        { key: 'responseRate', label: 'Response Rate (%)', borderColor: 'rgb(168, 85, 247)', backgroundColor: 'rgba(168, 85, 247, 0.1)', transform: Number.parseFloat }
+      ])
     };
   }, [periods, reportData]);
 

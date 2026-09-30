@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import ReportLayout from '../components/reports/ReportLayout';
 import { barChartOptions } from '../utils/reportChartSetup';
-import { buildMeetingPipelineChart } from '../utils/reportChartData';
+import { buildBarChart, buildLineChart, buildMeetingPipelineChart } from '../utils/reportChartData';
 
 export default function LinkedInReport() {
   const { id } = useParams();
@@ -180,58 +180,19 @@ const calculateReportData = () => {
     
     return {
       connectionFunnel: {
-        labels,
-        datasets: [
-          {
-            label: 'Connection Request Sent',
-            data: labels.map(period => reportData[period]?.connectionRequestSent || 0),
-            borderColor: 'rgb(59, 130, 246)',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            tension: 0.4,
-            fill: true,
-          },
-          {
-            label: 'Connection Accepted',
-            data: labels.map(period => reportData[period]?.connectionAccepted || 0),
-            borderColor: 'rgb(34, 197, 94)',
-            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-            tension: 0.4,
-            fill: true,
-          }
-        ]
+        ...buildLineChart(labels, reportData, [
+          { key: 'connectionRequestSent', label: 'Connection Request Sent', borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)' },
+          { key: 'connectionAccepted', label: 'Connection Accepted', borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.1)' }
+        ])
       },
-      messageActivity: {
-        labels,
-        datasets: [
-          {
-            label: 'First Message Sent',
-            data: labels.map(period => reportData[period]?.firstMessageSent || 0),
-            borderColor: 'rgb(168, 85, 247)',
-            backgroundColor: 'rgba(168, 85, 247, 0.1)',
-            tension: 0.4,
-            fill: true,
-          },
-          {
-            label: 'Followup Messages',
-            data: labels.map(period => reportData[period]?.followupMessagesSent || 0),
-            borderColor: 'rgb(236, 72, 153)',
-            backgroundColor: 'rgba(236, 72, 153, 0.1)',
-            tension: 0.4,
-            fill: true,
-          }
-        ]
-      },
+      messageActivity: buildLineChart(labels, reportData, [
+        { key: 'firstMessageSent', label: 'First Message Sent', borderColor: 'rgb(168, 85, 247)', backgroundColor: 'rgba(168, 85, 247, 0.1)' },
+        { key: 'followupMessagesSent', label: 'Followup Messages', borderColor: 'rgb(236, 72, 153)', backgroundColor: 'rgba(236, 72, 153, 0.1)' }
+      ]),
       meetingPipeline: buildMeetingPipelineChart(labels, reportData, 'rgba(59, 130, 246, 0.8)'),
-      conversationsStatus: {
-        labels,
-        datasets: [
-          {
-            label: 'Conversations in Progress',
-            data: labels.map(period => reportData[period]?.conversationsInProgress || 0),
-            backgroundColor: 'rgba(34, 197, 94, 0.8)',
-          }
-        ]
-      }
+      conversationsStatus: buildBarChart(labels, reportData, [
+        { key: 'conversationsInProgress', label: 'Conversations in Progress', backgroundColor: 'rgba(34, 197, 94, 0.8)' }
+      ])
     };
   }, [periods, reportData]);
 

@@ -18,6 +18,7 @@ const { requireProjectAccess, getProjectAccessFilter, isAdmin, canAccessProject 
 // Get the actual MongoDB collection name for ProspectContact
 // Mongoose automatically pluralizes and lowercases: 'ProspectContact' -> 'prospectcontacts'
 const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
+const MEETING_STAGES = ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting'];
 
 // Configure multer for file uploads
 const upload = multer({
@@ -70,6 +71,49 @@ function buildStripSeparatorsExpr(stringExpr) {
 function buildNormalizedPhoneExpr(phoneExpr) {
   // phoneExpr should evaluate to a string (e.g., { $ifNull: ['$contact.firstPhone', ''] })
   return buildStripSeparatorsExpr({ $trim: { input: phoneExpr } });
+}
+
+function buildProjectContactsLookup() {
+  return {
+    $lookup: {
+      from: 'projectcontacts',
+      localField: '_id',
+      foreignField: 'projectId',
+      as: 'contacts'
+    }
+  };
+}
+
+function buildProjectActivitiesLookup({ isAdmin, userId }) {
+  return {
+    $lookup: {
+      from: 'activities',
+      let: { projectId: '$_id' },
+      pipeline: [
+        {
+          $match: isAdmin
+            ? { $expr: { $eq: ['$projectId', '$$projectId'] } }
+            : {
+                $expr: { $eq: ['$projectId', '$$projectId'] },
+                createdBy: userId
+              }
+        }
+      ],
+      as: 'activities'
+    }
+  };
+}
+
+function buildContactStageCountExpression(condition) {
+  return {
+    $size: {
+      $filter: {
+        input: '$contacts',
+        as: 'contact',
+        cond: condition
+      }
+    }
+  };
 }
 
 function buildDedupedProspectContactPipeline(projectFilter) {
@@ -570,31 +614,8 @@ router.get('/analytics', authenticate, async (req, res) => {
       (() => {
         const pipeline = [
           { $match: projectFilter },
-          {
-            $lookup: {
-              from: 'projectcontacts',
-              localField: '_id',
-              foreignField: 'projectId',
-              as: 'contacts'
-            }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { projectId: '$_id' },
-              pipeline: [
-                {
-                  $match: isAdmin 
-                    ? { $expr: { $eq: ['$projectId', '$$projectId'] } }
-                    : {
-                        $expr: { $eq: ['$projectId', '$$projectId'] },
-                        createdBy: user._id
-                      }
-                }
-              ],
-              as: 'activities'
-            }
-          },
+          buildProjectContactsLookup(),
+          buildProjectActivitiesLookup({ isAdmin, userId: user._id }),
         {
           $project: {
             _id: 1,
@@ -611,24 +632,8 @@ router.get('/analytics', authenticate, async (req, res) => {
                 }
               }
             },
-            wonCount: {
-              $size: {
-                $filter: {
-                  input: '$contacts',
-                  as: 'contact',
-                  cond: { $eq: ['$$contact.stage', 'WON'] }
-                }
-              }
-            },
-            lostCount: {
-              $size: {
-                $filter: {
-                  input: '$contacts',
-                  as: 'contact',
-                  cond: { $eq: ['$$contact.stage', 'Lost'] }
-                }
-              }
-            }
+            wonCount: buildContactStageCountExpression({ $eq: ['$$contact.stage', 'WON'] }),
+            lostCount: buildContactStageCountExpression({ $eq: ['$$contact.stage', 'Lost'] })
           }
         },
         {
@@ -653,31 +658,8 @@ router.get('/analytics', authenticate, async (req, res) => {
       (() => {
         const pipeline = [
           { $match: projectFilter },
-          {
-            $lookup: {
-              from: 'projectcontacts',
-              localField: '_id',
-              foreignField: 'projectId',
-              as: 'contacts'
-            }
-          },
-          {
-            $lookup: {
-              from: 'activities',
-              let: { projectId: '$_id' },
-              pipeline: [
-                {
-                  $match: isAdmin 
-                    ? { $expr: { $eq: ['$projectId', '$$projectId'] } }
-                    : {
-                        $expr: { $eq: ['$projectId', '$$projectId'] },
-                        createdBy: user._id
-                      }
-                }
-              ],
-              as: 'activities'
-            }
-          },
+          buildProjectContactsLookup(),
+          buildProjectActivitiesLookup({ isAdmin, userId: user._id }),
         {
           $project: {
             _id: 1,
@@ -685,24 +667,8 @@ router.get('/analytics', authenticate, async (req, res) => {
             status: 1,
             contactCount: { $size: '$contacts' },
             activityCount: { $size: '$activities' },
-            wonCount: {
-              $size: {
-                $filter: {
-                  input: '$contacts',
-                  as: 'contact',
-                  cond: { $eq: ['$$contact.stage', 'WON'] }
-                }
-              }
-            },
-            meetingCount: {
-              $size: {
-                $filter: {
-                  input: '$contacts',
-                  as: 'contact',
-                  cond: { $in: ['$$contact.stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] }
-                }
-              }
-            }
+            wonCount: buildContactStageCountExpression({ $eq: ['$$contact.stage', 'WON'] }),
+            meetingCount: buildContactStageCountExpression({ $in: ['$$contact.stage', MEETING_STAGES] })
           }
         },
         { $sort: { wonCount: -1, meetingCount: -1 } },
