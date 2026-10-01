@@ -80,7 +80,7 @@ export function calculateFunnelData({ channel, contacts, activities }) {
   });
 
   data.followups = Object.values(contactActivities)
-    .filter(config.isFollowup)
+    .filter(activitiesForContact => config.isFollowup(activitiesForContact))
     .length;
   Object.entries(metricSets).forEach(([metric, contactsForMetric]) => {
     data[metric] = contactsForMetric.size;
