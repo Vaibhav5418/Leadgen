@@ -3,6 +3,7 @@ const router = express.Router();
 const { generatePersonalizedEmail, generatePersonalizedLinkedInMessage } = require('../services/aiService');
 const authenticate = require('../middleware/auth');
 const { requireProjectAccess } = require('../middleware/projectAccess');
+const { getAIErrorResponse } = require('../utils/aiErrorHandler');
 
 /**
  * Generate personalized email
@@ -50,24 +51,7 @@ router.post('/generate-email', authenticate, requireProjectAccess, async (req, r
   } catch (error) {
     console.error('Error generating email:', error);
     
-    let errorMessage = 'Failed to generate personalized email';
-    let statusCode = 500;
-
-    if (error.message?.includes('API key') || error.message?.includes('Groq API key')) {
-      statusCode = 500;
-      errorMessage = 'Groq API key is not configured. Please add GROQ_API_KEY to your .env file.';
-    } else if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('billing')) {
-      statusCode = 429;
-      errorMessage = 'Groq API quota exceeded. Please check your Groq account billing and add credits.';
-    } else if (error.message?.includes('Contact not found')) {
-      statusCode = 404;
-    } else if (error.message?.includes('Contact does not belong')) {
-      statusCode = 403;
-      errorMessage = 'Access denied: Contact does not belong to the specified project';
-    } else {
-      // Do not leak raw error messages to the client
-      errorMessage = 'Unable to generate the requested content.';
-    }
+    const { statusCode, errorMessage } = getAIErrorResponse(error, 'Failed to generate personalized email');
 
     res.status(statusCode).json({
       success: false,
@@ -119,24 +103,7 @@ router.post('/generate-linkedin', authenticate, requireProjectAccess, async (req
   } catch (error) {
     console.error('Error generating LinkedIn message:', error);
     
-    let errorMessage = 'Failed to generate personalized LinkedIn message';
-    let statusCode = 500;
-
-    if (error.message?.includes('API key') || error.message?.includes('Groq API key')) {
-      statusCode = 500;
-      errorMessage = 'Groq API key is not configured. Please add GROQ_API_KEY to your .env file.';
-    } else if (error.status === 429 || error.message?.includes('quota') || error.message?.includes('billing')) {
-      statusCode = 429;
-      errorMessage = 'Groq API quota exceeded. Please check your Groq account billing and add credits.';
-    } else if (error.message?.includes('Contact not found')) {
-      statusCode = 404;
-    } else if (error.message?.includes('Contact does not belong')) {
-      statusCode = 403;
-      errorMessage = 'Access denied: Contact does not belong to the specified project';
-    } else {
-      // Do not leak raw error messages to the client
-      errorMessage = 'Unable to generate the requested content.';
-    }
+    const { statusCode, errorMessage } = getAIErrorResponse(error, 'Failed to generate personalized LinkedIn message');
 
     res.status(statusCode).json({
       success: false,

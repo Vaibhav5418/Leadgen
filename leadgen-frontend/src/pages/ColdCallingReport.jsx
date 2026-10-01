@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import ReportLayout from '../components/reports/ReportLayout';
 import { barChartOptions } from '../utils/reportChartSetup';
+import { COLD_CALLING_REPORT_COLUMNS } from '../config/reportColumns';
 
 export default function ColdCallingReport() {
   const { id } = useParams();
@@ -174,25 +175,7 @@ const calculateReportData = () => {
     calculateReportData();
   }, [activities, contacts, viewMode]);
 
-  const metrics = [
-    // DRA Section
-    { key: 'dataAllocated', label: 'Data Allocated', section: 'DRA', bold: false },
-    { key: 'interested', label: 'Interested', section: 'DRA', bold: true },
-    { key: 'notInterested', label: 'Not Interested', section: 'DRA', bold: true },
-    { key: 'ring', label: 'Ring', section: 'DRA', bold: false },
-    { key: 'busy', label: 'Busy', section: 'DRA', bold: false, highlight: true },
-    { key: 'hangUp', label: 'Hang Up', section: 'DRA', bold: false },
-    { key: 'callBack', label: 'Call Back', section: 'DRA', bold: false },
-    { key: 'switchOff', label: 'Switch Off', section: 'DRA', bold: false },
-    // Cold Calling Section
-    { key: 'detailsShared', label: 'Detailed Shared', section: 'Cold Calling', bold: true, highlight: true },
-    { key: 'future', label: 'Future', section: 'Cold Calling', bold: false },
-    { key: 'invalid', label: 'Invalid', section: 'Cold Calling', bold: false },
-    { key: 'demoBooked', label: 'Demo Booked', section: 'Cold Calling', bold: true, highlight: true, highlightDark: true },
-    { key: 'followUps', label: 'Follow Ups', section: 'Cold Calling', bold: true },
-    { key: 'totalCalls', label: 'Total Calls', section: 'Cold Calling', bold: true },
-    { key: 'freshCalls', label: '(Fresh Calls + FollowUpS)', section: 'Cold Calling', bold: false, isFormula: true }
-  ];
+  const metrics = COLD_CALLING_REPORT_COLUMNS;
 
   const periods = viewMode === 'day' ? getDays() : getMonths();
 

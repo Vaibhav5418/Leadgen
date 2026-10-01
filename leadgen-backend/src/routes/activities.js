@@ -6,8 +6,8 @@ const ProspectContact = require('../models/ProspectContact');
 const Contact = require('../models/Contact');
 const ProjectContact = require('../models/ProjectContact');
 const authenticate = require('../middleware/auth');
-const Project = require('../models/Project');
-const { requireProjectAccess, canAccessProject, isAdmin } = require('../middleware/projectAccess');
+const { requireProjectAccess, isAdmin } = require('../middleware/projectAccess');
+const { authorizeActivityAccess } = require('../middleware/activityAuthorization');
 
 // Mongoose automatically pluralizes and lowercases: 'ProspectContact' -> 'prospectcontacts'
 const PROSPECT_CONTACT_COLLECTION = 'prospectcontacts';
@@ -671,22 +671,9 @@ router.get('/team-performance', authenticate, async (req, res) => {
 // Get a single activity
 router.get('/:id', authenticate, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
-    }
-    const activity = await Activity.findById(req.params.id).lean();
-
-    if (!activity) {
-      return res.status(404).json({
-        success: false,
-        error: 'Activity not found'
-      });
-    }
-
-    const project = await Project.findById(activity.projectId);
-    if (!project || !canAccessProject(req.user, project)) {
-      return res.status(403).json({ success: false, error: 'Access denied' });
-    }
+    const authorization = await authorizeActivityAccess(req, req.params.id, { lean: true });
+    if (authorization.error) return res.status(authorization.error.status).json({ success: false, error: authorization.error.message });
+    const activity = authorization.activity;
 
     res.json({
       success: true,
@@ -724,27 +711,9 @@ router.put('/:id', authenticate, async (req, res) => {
       linkedinDate
     } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
-    }
-
-    const activity = await Activity.findById(req.params.id);
-
-    if (!activity) {
-      return res.status(404).json({
-        success: false,
-        error: 'Activity not found'
-      });
-    }
-
-    const project = await Project.findById(activity.projectId);
-    if (!project || !canAccessProject(req.user, project)) {
-      return res.status(403).json({ success: false, error: 'Access denied' });
-    }
-
-    if (!isAdmin(req.user) && activity.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, error: 'Cannot modify another user\'s activity' });
-    }
+    const authorization = await authorizeActivityAccess(req, req.params.id, { requireOwner: true });
+    if (authorization.error) return res.status(authorization.error.status).json({ success: false, error: authorization.error.message });
+    const activity = authorization.activity;
 
     // Validate next action date is within 7 days (if provided)
     let selectedDate = null;
@@ -880,26 +849,12 @@ router.put('/:id', authenticate, async (req, res) => {
 // Delete an activity
 router.delete('/:id', authenticate, async (req, res) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ success: false, error: 'Invalid activity ID format' });
-    }
-    const activity = await Activity.findById(req.params.id);
-
-    if (!activity) {
-      return res.status(404).json({
-        success: false,
-        error: 'Activity not found'
-      });
-    }
-
-    const project = await Project.findById(activity.projectId);
-    if (!project || !canAccessProject(req.user, project)) {
-      return res.status(403).json({ success: false, error: 'Access denied' });
-    }
-
-    if (!isAdmin(req.user) && activity.createdBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, error: 'Cannot delete another user\'s activity' });
-    }
+    const authorization = await authorizeActivityAccess(req, req.params.id, {
+      requireOwner: true,
+      ownerError: 'Cannot delete another user\'s activity'
+    });
+    if (authorization.error) return res.status(authorization.error.status).json({ success: false, error: authorization.error.message });
+    const activity = authorization.activity;
 
     await Activity.findByIdAndDelete(req.params.id);
 

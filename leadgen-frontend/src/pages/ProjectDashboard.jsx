@@ -1,36 +1,8 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-// Lazy load chart components
-const Line = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Line })));
-const Bar = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Bar })));
-const Doughnut = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Doughnut })));
-const Pie = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Pie })));
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { Bar, Doughnut, Line, Pie } from '../utils/dashboardChartSetup';
+import ActivityChart from '../components/charts/ActivityChart';
 
 export default function ProjectDashboard() {
   const navigate = useNavigate();
@@ -272,93 +244,30 @@ export default function ProjectDashboard() {
 
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Activity Trends */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Trends (Last 7 Days)</h3>
-                {analytics.activities.trends.labels.length > 0 ? (
-                  <div className="h-64">
-                    <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600"></div></div>}>
-                      <Line
-                        data={{
-                          labels: analytics.activities.trends.labels,
-                          datasets: [
-                            {
-                              label: 'Calls',
-                              data: analytics.activities.trends.call,
-                              borderColor: 'rgb(34, 197, 94)',
-                              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                              tension: 0.4,
-                            },
-                            {
-                              label: 'Emails',
-                              data: analytics.activities.trends.email,
-                              borderColor: 'rgb(59, 130, 246)',
-                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                              tension: 0.4,
-                            },
-                            {
-                              label: 'LinkedIn',
-                              data: analytics.activities.trends.linkedin,
-                              borderColor: 'rgb(168, 85, 247)',
-                              backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                              tension: 0.4,
-                            },
-                          ],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: { position: 'top' },
-                          },
-                          scales: {
-                            y: { beginAtZero: true },
-                          },
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <p className="text-sm">No activity data available</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Activity Distribution */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Distribution</h3>
-                {analytics.activities.byType.length > 0 ? (
-                  <div className="h-64">
-                    <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600"></div></div>}>
-                      <Doughnut
-                        data={{
-                          labels: analytics.activities.byType.map(a => a.type.charAt(0).toUpperCase() + a.type.slice(1)),
-                          datasets: [{
-                            data: analytics.activities.byType.map(a => a.count),
-                            backgroundColor: [
-                              'rgb(34, 197, 94)',
-                              'rgb(59, 130, 246)',
-                              'rgb(168, 85, 247)',
-                            ],
-                          }],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: { position: 'bottom' },
-                          },
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <p className="text-sm">No activity data available</p>
-                  </div>
-                )}
-              </div>
+              <ActivityChart
+                title="Activity Trends (Last 7 Days)"
+                hasData={analytics.activities.trends.labels.length > 0}
+                chartComponent={Line}
+                data={{
+                  labels: analytics.activities.trends.labels,
+                  datasets: [
+                    { label: 'Calls', data: analytics.activities.trends.call, borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.1)', tension: 0.4 },
+                    { label: 'Emails', data: analytics.activities.trends.email, borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4 },
+                    { label: 'LinkedIn', data: analytics.activities.trends.linkedin, borderColor: 'rgb(168, 85, 247)', backgroundColor: 'rgba(168, 85, 247, 0.1)', tension: 0.4 }
+                  ]
+                }}
+                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }}
+              />
+              <ActivityChart
+                title="Activity Distribution"
+                hasData={analytics.activities.byType.length > 0}
+                chartComponent={Doughnut}
+                data={{
+                  labels: analytics.activities.byType.map(a => a.type.charAt(0).toUpperCase() + a.type.slice(1)),
+                  datasets: [{ data: analytics.activities.byType.map(a => a.count), backgroundColor: ['rgb(34, 197, 94)', 'rgb(59, 130, 246)', 'rgb(168, 85, 247)'] }]
+                }}
+                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
+              />
             </div>
 
             {/* Charts Row 2 */}

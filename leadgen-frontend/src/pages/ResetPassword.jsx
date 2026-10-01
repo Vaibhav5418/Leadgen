@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axios';
+import PasswordInput from '../components/auth/PasswordInput';
+import AuthPageLayout from '../components/auth/AuthPageLayout';
+import LoadingButton from '../components/common/LoadingButton';
+import { getPasswordResetError, resetPassword, validatePasswordReset } from '../services/authService';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -29,38 +32,15 @@ export default function ResetPassword() {
     setError('');
     setSuccess('');
 
-    if (!formData.email.trim()) {
-      setError('Email address is required');
-      return;
-    }
-
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!formData.newPassword.trim()) {
-      setError('New password is required');
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    const validationError = validatePasswordReset(formData);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setLoading(true);
     try {
-      const response = await API.post('/auth/reset-password', {
-        email: formData.email.trim(),
-        newPassword: formData.newPassword.trim()
-      });
+      const response = await resetPassword(formData.email, formData.newPassword);
 
       if (response.data.success) {
         setSuccess('Password reset successfully! Redirecting to login...');
@@ -69,34 +49,14 @@ export default function ResetPassword() {
         }, 2000);
       }
     } catch (err) {
-      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || !err.response) {
-        setError('Cannot connect to server. Please make sure the backend server is running.');
-      } else {
-        setError(err.response?.data?.error || err.message || 'Failed to reset password');
-      }
+      setError(getPasswordResetError(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <div className="w-6 h-6 bg-blue-600 rounded-full"></div>
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset Password</h1>
-          <p className="text-gray-600">
-            Enter your email and new password to reset
-          </p>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+    <AuthPageLayout title="Reset Password" subtitle="Enter your email and new password to reset">
           {/* Error Message */}
           {error && (
             <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex items-start gap-2.5">
@@ -140,8 +100,11 @@ export default function ResetPassword() {
                 New Password
               </label>
               <div className="relative">
-                <input
+                <PasswordInput
                   id="reset-password"
+                  showPassword={showNewPassword}
+                  onToggle={() => setShowNewPassword(!showNewPassword)}
+                  externalToggle
                   type={showNewPassword ? 'text' : 'password'}
                   name="newPassword"
                   value={formData.newPassword}
@@ -178,8 +141,11 @@ export default function ResetPassword() {
                 Confirm New Password
               </label>
               <div className="relative">
-                <input
+                <PasswordInput
                   id="reset-confirm-password"
+                  showPassword={showConfirmPassword}
+                  onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                  externalToggle
                   type={showConfirmPassword ? 'text' : 'password'}
                   name="confirmPassword"
                   value={formData.confirmPassword}
@@ -208,26 +174,16 @@ export default function ResetPassword() {
               </div>
             </div>
 
-            <button
+            <LoadingButton
               type="submit"
+              loading={loading}
+              loadingText="Resetting Password..."
               disabled={loading}
               className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg mt-2 text-sm"
             >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Resetting Password...
-                </span>
-              ) : (
-                'Reset & Update Password'
-              )}
-            </button>
+              Reset & Update Password
+            </LoadingButton>
           </form>
-        </div>
-
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
           Remember your password?{' '}
@@ -238,8 +194,7 @@ export default function ResetPassword() {
             Sign in
           </button>
         </p>
-      </div>
-    </div>
+    </AuthPageLayout>
   );
 }
 

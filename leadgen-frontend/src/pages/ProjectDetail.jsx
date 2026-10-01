@@ -4,6 +4,9 @@ import API from '../api/axios';
 import ActivityLogModal from '../components/ActivityLogModal';
 import BulkImportModal from '../components/BulkImportModal';
 import BulkActivityLogModal from '../components/BulkActivityLogModal';
+import ProspectMetricTable from '../components/prospects/ProspectMetricTable';
+import { mergeUniqueContacts } from '../utils/contactUtils';
+import { matchesFollowupMetric } from '../utils/followupUtils';
 
 // Helper function to get the activity date (prioritize activity-specific dates over createdAt)
 const getActivityDate = (activity) => {
@@ -784,30 +787,7 @@ export default function ProjectDetail() {
         setContactsPage(page);
         
         // Deduplicate contacts by _id (contact ID) - ensure each contact appears only once
-        const contactsMap = new Map();
-        
-        contactsData.forEach(contact => {
-          const contactId = contact._id?.toString ? contact._id.toString() : String(contact._id);
-          if (!contactId) return; // Skip contacts without IDs
-          
-          const existing = contactsMap.get(contactId);
-          if (!existing) {
-            // First occurrence - add it
-            contactsMap.set(contactId, contact);
-          } else {
-            // Duplicate found - prefer the one with projectContactId (imported) over activity-based
-            const existingHasProjectContact = existing.projectContactId !== null && existing.projectContactId !== undefined;
-            const newHasProjectContact = contact.projectContactId !== null && contact.projectContactId !== undefined;
-            
-            if (newHasProjectContact && !existingHasProjectContact) {
-              // New one is imported (has projectContactId), existing is activity-based - replace
-              contactsMap.set(contactId, contact);
-            }
-          }
-        });
-        
-        // Convert map back to array - this ensures each contact appears only once
-        let uniqueContacts = Array.from(contactsMap.values());
+        let uniqueContacts = mergeUniqueContacts([], contactsData);
         
         // Also filter out any contacts that were previously deleted (prevent reappearance)
         if (deletedContactIds.size > 0) {
@@ -2066,30 +2046,7 @@ export default function ProjectDetail() {
         }
         
         // Deduplicate contacts by _id (contact ID) - ensure each contact appears only once
-        const contactsMap = new Map();
-        
-        allContactsData.forEach(contact => {
-          const contactId = contact._id?.toString ? contact._id.toString() : String(contact._id);
-          if (!contactId) return; // Skip contacts without IDs
-          
-          const existing = contactsMap.get(contactId);
-          if (!existing) {
-            // First occurrence - add it
-            contactsMap.set(contactId, contact);
-          } else {
-            // Duplicate found - prefer the one with projectContactId (imported) over activity-based
-            const existingHasProjectContact = existing.projectContactId !== null && existing.projectContactId !== undefined;
-            const newHasProjectContact = contact.projectContactId !== null && contact.projectContactId !== undefined;
-            
-            if (newHasProjectContact && !existingHasProjectContact) {
-              // New one is imported (has projectContactId), existing is activity-based - replace
-              contactsMap.set(contactId, contact);
-            }
-          }
-        });
-        
-        // Convert map back to array - this ensures each contact appears only once
-        const uniqueContacts = Array.from(contactsMap.values());
+        const uniqueContacts = mergeUniqueContacts([], allContactsData);
         setAllContactsForKpi(uniqueContacts);
       }
     } catch (err) {
@@ -2183,26 +2140,9 @@ export default function ProjectDetail() {
                 return false;
               }
             } else {
-              hasMatchingActivity = fallbackLinkedinActivities.some(a => {
-                if (!a.nextActionDate) return false;
-                try {
-                  const d = new Date(a.nextActionDate);
-                  if (Number.isNaN(d.getTime())) return false; // Invalid date
-                  d.setHours(0, 0, 0, 0);
-                  if (kpiFilter.metric === 'followups') {
-                    // Show all follow-ups (today, tomorrow, or missed)
-                    return true;
-                  } else if (kpiFilter.metric === 'todayFollowups') {
-                    return d >= today && d < tomorrow;
-                  } else if (kpiFilter.metric === 'tomorrowFollowups') {
-                    return d >= tomorrow && d < dayAfterTomorrow;
-                  }
-                  return false;
-                } catch (dateError) {
-                  console.error('Error parsing nextActionDate for LinkedIn activity:', dateError, a);
-                  return false;
-                }
-              });
+              hasMatchingActivity = fallbackLinkedinActivities.some(a =>
+                matchesFollowupMetric(a, kpiFilter.metric, today, tomorrow, dayAfterTomorrow, 'LinkedIn')
+              );
             }
           } else if (kpiFilter.metric === 'cip') {
             hasMatchingActivity = fallbackLinkedinActivities.some(a => 
@@ -2294,26 +2234,9 @@ export default function ProjectDetail() {
                 return false;
               }
             } else {
-              hasMatchingActivity = fallbackCallActivities.some(a => {
-                if (!a.nextActionDate) return false;
-                try {
-                  const d = new Date(a.nextActionDate);
-                  if (Number.isNaN(d.getTime())) return false; // Invalid date
-                  d.setHours(0, 0, 0, 0);
-                  if (kpiFilter.metric === 'followups') {
-                    // Show all follow-ups (today, tomorrow, or missed)
-                    return true;
-                  } else if (kpiFilter.metric === 'todayFollowups') {
-                    return d >= today && d < tomorrow;
-                  } else if (kpiFilter.metric === 'tomorrowFollowups') {
-                    return d >= tomorrow && d < dayAfterTomorrow;
-                  }
-                  return false;
-                } catch (dateError) {
-                  console.error('Error parsing nextActionDate for Call activity:', dateError, a);
-                  return false;
-                }
-              });
+              hasMatchingActivity = fallbackCallActivities.some(a =>
+                matchesFollowupMetric(a, kpiFilter.metric, today, tomorrow, dayAfterTomorrow, 'Call')
+              );
             }
           }
         } else if (kpiFilter.channel === 'email') {
@@ -2347,26 +2270,9 @@ export default function ProjectDetail() {
                 return false;
               }
             } else {
-              hasMatchingActivity = fallbackEmailActivities.some(a => {
-                if (!a.nextActionDate) return false;
-                try {
-                  const d = new Date(a.nextActionDate);
-                  if (Number.isNaN(d.getTime())) return false; // Invalid date
-                  d.setHours(0, 0, 0, 0);
-                  if (kpiFilter.metric === 'followups') {
-                    // Show all follow-ups (today, tomorrow, or missed)
-                    return true;
-                  } else if (kpiFilter.metric === 'todayFollowups') {
-                    return d >= today && d < tomorrow;
-                  } else if (kpiFilter.metric === 'tomorrowFollowups') {
-                    return d >= tomorrow && d < dayAfterTomorrow;
-                  }
-                  return false;
-                } catch (dateError) {
-                  console.error('Error parsing nextActionDate for Email activity:', dateError, a);
-                  return false;
-                }
-              });
+              hasMatchingActivity = fallbackEmailActivities.some(a =>
+                matchesFollowupMetric(a, kpiFilter.metric, today, tomorrow, dayAfterTomorrow, 'Email')
+              );
             }
           } else if (kpiFilter.metric === 'emailsSent') {
             hasMatchingActivity = fallbackEmailActivities.length > 0;
@@ -5341,6 +5247,10 @@ export default function ProjectDetail() {
                 }
                 
                 if (filteredProspects.length === 0) {
+                  return <ProspectMetricTable prospects={filteredProspects} renderRow={() => null} />;
+                }
+                /*
+                if (filteredProspects.length === 0) {
                   return (
                     <div className="text-center py-12 text-gray-500">
                       <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -5350,20 +5260,9 @@ export default function ProjectDetail() {
                     </div>
                   );
                 }
+                */
 
-                return (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">CONTACT</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">COMPANY</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">DATE</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">STATUS</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProspects.map((contact) => {
+                const renderProjectProspectRow = (contact) => {
                           const contactIdStr = (contact._id?.toString ? contact._id.toString() : contact._id) || '';
                           const latestActivity = contactIdStr ? activityLookups.lastActivityByContactId.get(contactIdStr) : null;
                           const latestStatusData = contactIdStr ? activityLookups.latestActivityStatusByContactId.get(contactIdStr) : null;
@@ -5424,11 +5323,9 @@ export default function ProjectDetail() {
                               </td>
                             </tr>
                           );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                );
+                };
+
+                return <ProspectMetricTable prospects={filteredProspects} renderRow={renderProjectProspectRow} />;
               })()}
             </div>
           </div>

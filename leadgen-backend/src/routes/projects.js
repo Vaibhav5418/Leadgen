@@ -14,6 +14,14 @@ const Activity = require('../models/Activity');
 const User = require('../models/User');
 const authenticate = require('../middleware/auth');
 const { requireProjectAccess, getProjectAccessFilter, isAdmin, canAccessProject } = require('../middleware/projectAccess');
+const {
+  addProjectTeamMembers,
+  buildActivityMetricsAggregation,
+  buildActivityTrendData,
+  buildConversionMetricsStage,
+  calculateConversionRates,
+  getConversionData
+} = require('../utils/metricsUtils');
 
 // Get the actual MongoDB collection name for ProspectContact
 // Mongoose automatically pluralizes and lowercases: 'ProspectContact' -> 'prospectcontacts'
@@ -586,26 +594,7 @@ router.get('/analytics', authenticate, async (req, res) => {
       // Team performance (activities per team member) - filter by user unless admin
       Activity.aggregate([
         { $match: activityFilter },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'createdBy',
-            foreignField: '_id',
-            as: 'user'
-          }
-        },
-        { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-        {
-          $group: {
-            _id: '$createdBy',
-            name: { $first: '$user.name' },
-            email: { $first: '$user.email' },
-            activityCount: { $sum: 1 },
-            calls: { $sum: { $cond: [{ $eq: ['$type', 'call'] }, 1, 0] } },
-            emails: { $sum: { $cond: [{ $eq: ['$type', 'email'] }, 1, 0] } },
-            linkedin: { $sum: { $cond: [{ $eq: ['$type', 'linkedin'] }, 1, 0] } }
-          }
-        },
+        ...buildActivityMetricsAggregation(),
         { $sort: { activityCount: -1 } },
         { $limit: 10 }
       ]),
@@ -680,25 +669,7 @@ router.get('/analytics', authenticate, async (req, res) => {
       // Conversion metrics - only from existing projects
       ProjectContact.aggregate([
         { $match: { projectId: { $in: projectIds } } },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: 1 },
-            won: { $sum: { $cond: [{ $eq: ['$stage', 'WON'] }, 1, 0] } },
-            lost: { $sum: { $cond: [{ $eq: ['$stage', 'Lost'] }, 1, 0] } },
-            meetings: {
-              $sum: {
-                $cond: [
-                  { $in: ['$stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] },
-                  1,
-                  0
-                ]
-              }
-            },
-            sql: { $sum: { $cond: [{ $eq: ['$stage', 'SQL'] }, 1, 0] } },
-            cip: { $sum: { $cond: [{ $eq: ['$stage', 'CIP'] }, 1, 0] } }
-          }
-        }
+          buildConversionMetricsStage()
       ]),
       
       // Activity trends (last 7 days) - filter by user unless admin
@@ -750,36 +721,9 @@ router.get('/analytics', authenticate, async (req, res) => {
     const channelData = channelUsage[0] || { linkedIn: 0, email: 0, calling: 0 };
     
     // Process conversion metrics
-    const conversionData = conversionMetrics[0] || {
-      total: 0,
-      won: 0,
-      lost: 0,
-      meetings: 0,
-      sql: 0,
-      cip: 0
-    };
-    
-    const winRate = conversionData.total > 0 
-      ? ((conversionData.won / conversionData.total) * 100).toFixed(1)
-      : 0;
-    const meetingRate = conversionData.total > 0
-      ? ((conversionData.meetings / conversionData.total) * 100).toFixed(1)
-      : 0;
-    
-    // Process activity trends
-    const trendData = {};
-    activityTrends.forEach(item => {
-      const date = item._id.date;
-      if (!trendData[date]) {
-        trendData[date] = { call: 0, email: 0, linkedin: 0 };
-      }
-      trendData[date][item._id.type] = item.count;
-    });
-    
-    const trendLabels = Object.keys(trendData).sort((a, b) => a.localeCompare(b));
-    const trendCallData = trendLabels.map(date => trendData[date].call || 0);
-    const trendEmailData = trendLabels.map(date => trendData[date].email || 0);
-    const trendLinkedInData = trendLabels.map(date => trendData[date].linkedin || 0);
+    const conversionData = getConversionData(conversionMetrics[0]);
+    const { winRate, meetingRate } = calculateConversionRates(conversionData);
+    const { trendLabels, trendCallData, trendEmailData, trendLinkedInData } = buildActivityTrendData(activityTrends);
     
     // Process activities by date
     const activityDateMap = {};
@@ -1024,41 +968,13 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
         // Collect all unique team member emails from projects
         const teamMemberEmails = new Set();
         projects.forEach(project => {
-          if (project.teamMembers && Array.isArray(project.teamMembers)) {
-            project.teamMembers.forEach(email => {
-              if (email && email.trim()) {
-                teamMemberEmails.add(email.toLowerCase().trim());
-              }
-            });
-          }
-          if (project.assignedTo && project.assignedTo.trim()) {
-            teamMemberEmails.add(project.assignedTo.toLowerCase().trim());
-          }
+          addProjectTeamMembers(teamMemberEmails, project);
         });
         
         // Get activity metrics for users who have created activities
         const activityBasedMembers = await Activity.aggregate([
           { $match: projectFilter },
-          {
-            $lookup: {
-              from: 'users',
-              localField: 'createdBy',
-              foreignField: '_id',
-              as: 'user'
-            }
-          },
-          { $unwind: { path: '$user', preserveNullAndEmptyArrays: true } },
-          {
-            $group: {
-              _id: '$createdBy',
-              name: { $first: '$user.name' },
-              email: { $first: '$user.email' },
-              activityCount: { $sum: 1 },
-              calls: { $sum: { $cond: [{ $eq: ['$type', 'call'] }, 1, 0] } },
-              emails: { $sum: { $cond: [{ $eq: ['$type', 'email'] }, 1, 0] } },
-              linkedin: { $sum: { $cond: [{ $eq: ['$type', 'linkedin'] }, 1, 0] } }
-            }
-          }
+          ...buildActivityMetricsAggregation()
         ]);
         
         // Add emails from activity-based members to the set
@@ -1286,25 +1202,7 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
       // Conversion metrics (deduped)
       ProjectContact.aggregate([
         ...buildDedupedProspectContactPipeline(projectFilter),
-        {
-          $group: {
-            _id: null,
-            total: { $sum: 1 },
-            won: { $sum: { $cond: [{ $eq: ['$stage', 'WON'] }, 1, 0] } },
-            lost: { $sum: { $cond: [{ $eq: ['$stage', 'Lost'] }, 1, 0] } },
-            meetings: {
-              $sum: {
-                $cond: [
-                  { $in: ['$stage', ['Meeting Scheduled', 'Meeting Completed', 'In-Person Meeting']] },
-                  1,
-                  0
-                ]
-              }
-            },
-            sql: { $sum: { $cond: [{ $eq: ['$stage', 'SQL'] }, 1, 0] } },
-            cip: { $sum: { $cond: [{ $eq: ['$stage', 'CIP'] }, 1, 0] } }
-          }
-        }
+          buildConversionMetricsStage()
       ]).allowDiskUse(true),
       
       // Top performing prospects (by activity count), deduped by (name+phone+email)
@@ -1830,36 +1728,9 @@ router.get('/prospect-analytics', authenticate, async (req, res) => {
     };
     
     // Process conversion metrics
-    const conversionData = conversionMetrics[0] || {
-      total: 0,
-      won: 0,
-      lost: 0,
-      meetings: 0,
-      sql: 0,
-      cip: 0
-    };
-    
-    const winRate = conversionData.total > 0 
-      ? ((conversionData.won / conversionData.total) * 100).toFixed(1)
-      : 0;
-    const meetingRate = conversionData.total > 0
-      ? ((conversionData.meetings / conversionData.total) * 100).toFixed(1)
-      : 0;
-    
-    // Process activity trends
-    const trendData = {};
-    activityTrends.forEach(item => {
-      const date = item._id.date;
-      if (!trendData[date]) {
-        trendData[date] = { call: 0, email: 0, linkedin: 0 };
-      }
-      trendData[date][item._id.type] = item.count;
-    });
-    
-    const trendLabels = Object.keys(trendData).sort((a, b) => a.localeCompare(b));
-    const trendCallData = trendLabels.map(date => trendData[date].call || 0);
-    const trendEmailData = trendLabels.map(date => trendData[date].email || 0);
-    const trendLinkedInData = trendLabels.map(date => trendData[date].linkedin || 0);
+    const conversionData = getConversionData(conversionMetrics[0]);
+    const { winRate, meetingRate } = calculateConversionRates(conversionData);
+    const { trendLabels, trendCallData, trendEmailData, trendLinkedInData } = buildActivityTrendData(activityTrends);
     
     // Get project info if specific project
     let projectInfo = null;
@@ -2014,16 +1885,7 @@ router.get('/team-member-funnels', authenticate, async (req, res) => {
     // Collect all unique team member emails from projects
     const teamMemberEmails = new Set();
     projectsForTeamMembers.forEach(project => {
-      if (project.teamMembers && Array.isArray(project.teamMembers)) {
-        project.teamMembers.forEach(email => {
-          if (email && email.trim()) {
-            teamMemberEmails.add(email.toLowerCase().trim());
-          }
-        });
-      }
-      if (project.assignedTo && project.assignedTo.trim()) {
-        teamMemberEmails.add(project.assignedTo.toLowerCase().trim());
-      }
+      addProjectTeamMembers(teamMemberEmails, project);
     });
     
     // Also get team members who have created activities (even if not in teamMembers array)

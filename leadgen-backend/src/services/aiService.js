@@ -5,6 +5,7 @@ const Contact = require('../models/Contact');
 const Activity = require('../models/Activity');
 const Project = require('../models/Project');
 const ProjectContact = require('../models/ProjectContact');
+const { buildAIContext } = require('../utils/aiContextBuilder');
 
 // Initialize Groq client
 let groq = null;
@@ -204,49 +205,7 @@ Use the INTRODUCTION template structure and tone (see Introduction template abov
  * templateType: 'introduction-email' | 'follow-up-email' | 'value-proposition-email' | null/other
  */
 function buildEmailPrompt(contactData, baseTemplate = null, templateType = null) {
-  const { contact, project, previousActivities } = contactData;
-
-  // Extract contact information
-  const contactInfo = {
-    name: contact.name || 'there',
-    title: contact.title || '',
-    company: contact.company || '',
-    industry: contact.industry || '',
-    location: contact.city || contact.state || contact.country || '',
-    keywords: contact.keywords || '',
-    website: contact.website || '',
-    linkedInUrl: contact.personLinkedinUrl || contact.companyLinkedinUrl || '',
-    email: contact.email || '',
-    technologies: contact.technologies || '',
-    seoDescription: contact.seoDescription || '',
-    employees: contact.employees || '',
-    annualRevenue: contact.annualRevenue || ''
-  };
-
-  // Extract project information
-  let projectInfo = '';
-  if (project) {
-    projectInfo = `
-Project Context:
-- Company: ${project.companyName || ''}
-- Industry: ${project.industry || ''}
-- Services Offered: ${project.campaignDetails?.servicesOffered ? Object.keys(project.campaignDetails.servicesOffered).filter(k => project.campaignDetails.servicesOffered[k]).join(', ') : ''}
-- Expectations: ${project.campaignDetails?.expectationsFromUs || ''}
-`;
-  }
-
-  // Extract previous activity context
-  let activityContext = '';
-  if (previousActivities && previousActivities.length > 0) {
-    const recentActivity = previousActivities[0];
-    activityContext = `
-Previous Interaction Context:
-- Last Activity Type: ${recentActivity.type || 'N/A'}
-- Last Status: ${recentActivity.status || 'N/A'}
-- Last Conversation Notes: ${recentActivity.conversationNotes || 'N/A'}
-- Last Template Used: ${recentActivity.template || 'N/A'}
-`;
-  }
+  const { contactInfo, projectInfo, activityContext } = buildAIContext(contactData);
 
   // Template-specific instructions for enterprise-level, personalized content
   const templateInstructions = getTemplateInstructions(templateType, !!activityContext);
@@ -485,50 +444,7 @@ async function generatePersonalizedEmail(contactId, projectId, baseTemplate = nu
  * Build context prompt for LinkedIn message generation
  */
 function buildLinkedInPrompt(contactData, baseTemplate = null) {
-  const { contact, project, previousActivities } = contactData;
-
-  // Extract contact information
-  const contactInfo = {
-    name: contact.name || 'there',
-    title: contact.title || '',
-    company: contact.company || '',
-    industry: contact.industry || '',
-    location: contact.city || contact.state || contact.country || '',
-    keywords: contact.keywords || '',
-    website: contact.website || '',
-    linkedInUrl: contact.personLinkedinUrl || contact.companyLinkedinUrl || '',
-    email: contact.email || '',
-    technologies: contact.technologies || '',
-    seoDescription: contact.seoDescription || '',
-    employees: contact.employees || '',
-    annualRevenue: contact.annualRevenue || ''
-  };
-
-  // Extract project information
-  let projectInfo = '';
-  if (project) {
-    projectInfo = `
-Project Context:
-- Company: ${project.companyName || ''}
-- Industry: ${project.industry || ''}
-- Services Offered: ${project.campaignDetails?.servicesOffered ? Object.keys(project.campaignDetails.servicesOffered).filter(k => project.campaignDetails.servicesOffered[k]).join(', ') : ''}
-- Expectations: ${project.campaignDetails?.expectationsFromUs || ''}
-`;
-  }
-
-  // Extract previous activity context
-  let activityContext = '';
-  if (previousActivities && previousActivities.length > 0) {
-    const recentActivity = previousActivities[0];
-    activityContext = `
-Previous Interaction Context:
-- Last Activity Type: ${recentActivity.type || 'N/A'}
-- Last Status: ${recentActivity.status || 'N/A'}
-- Last Conversation Notes: ${recentActivity.conversationNotes || 'N/A'}
-- Last Template Used: ${recentActivity.template || 'N/A'}
-- Connection Status: ${recentActivity.connected || 'N/A'}
-`;
-  }
+  const { contactInfo, projectInfo, activityContext } = buildAIContext(contactData, { includeConnectionStatus: true });
 
   // Build the prompt
   const prompt = `

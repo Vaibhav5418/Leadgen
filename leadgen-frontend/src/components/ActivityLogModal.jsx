@@ -1,6 +1,30 @@
 import { useState, useEffect, useRef } from 'react';
 import API from '../api/axios';
 import TemplateVariationsTable from './TemplateVariationsTable';
+import { ACTIVITY_STATUSES } from '../config/activityStatuses';
+
+const ACTIVITY_DATE_FIELDS = {
+  call: 'callDate',
+  email: 'emailDate',
+  linkedin: 'linkedinDate'
+};
+
+function LoadingSpinner({ className }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  );
+}
+
+function SaveCheckIcon({ className }) {
+  return (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
 
 export default function ActivityLogModal({ isOpen, onClose, type, contactName, companyName, projectId, contactId, phoneNumber, email, linkedInProfileUrl, activityId, editMode = false, lastActivity = null, isBulk = false, selectedContacts = new Set(), contacts = [] }) {
   const [formData, setFormData] = useState({
@@ -124,6 +148,20 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
     return null;
   };
 
+  const prefillLastActivityDate = async () => {
+    const lastActivityByType = await fetchLastActivityByType();
+    if (lastActivityByType) {
+      setFormData(prev => {
+        const dateField = ACTIVITY_DATE_FIELDS[type];
+        const date = dateField && lastActivityByType[dateField];
+        return date ? {
+          ...prev,
+          [dateField]: new Date(date).toISOString().split('T')[0]
+        } : prev;
+      });
+    }
+  };
+
   useEffect(() => {
     if (isOpen && !hasInitializedRef.current) {
       // Trigger animation after modal is mounted
@@ -170,22 +208,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
 
         // If lastActivity is not of the same type, fetch the most recent activity of the same type for date pre-filling
         if (activity.type !== type) {
-          void fetchLastActivityByType().then(lastActivityByType => {
-            if (lastActivityByType) {
-              setFormData(prev => {
-                const updated = { ...prev };
-                // Pre-fill the date based on the activity type
-                if (type === 'call' && lastActivityByType.callDate) {
-                  updated.callDate = new Date(lastActivityByType.callDate).toISOString().split('T')[0];
-                } else if (type === 'email' && lastActivityByType.emailDate) {
-                  updated.emailDate = new Date(lastActivityByType.emailDate).toISOString().split('T')[0];
-                } else if (type === 'linkedin' && lastActivityByType.linkedinDate) {
-                  updated.linkedinDate = new Date(lastActivityByType.linkedinDate).toISOString().split('T')[0];
-                }
-                return updated;
-              });
-            }
-          }).catch(error => {
+          void prefillLastActivityDate().catch(error => {
             console.error('Error pre-filling activity date:', error);
           });
         }
@@ -208,22 +231,7 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
         });
 
         // Fetch the most recent activity of the same type to pre-fill the date
-        void fetchLastActivityByType().then(lastActivityByType => {
-          if (lastActivityByType) {
-            setFormData(prev => {
-              const updated = { ...prev };
-              // Pre-fill the date based on the activity type
-              if (type === 'call' && lastActivityByType.callDate) {
-                updated.callDate = new Date(lastActivityByType.callDate).toISOString().split('T')[0];
-              } else if (type === 'email' && lastActivityByType.emailDate) {
-                updated.emailDate = new Date(lastActivityByType.emailDate).toISOString().split('T')[0];
-              } else if (type === 'linkedin' && lastActivityByType.linkedinDate) {
-                updated.linkedinDate = new Date(lastActivityByType.linkedinDate).toISOString().split('T')[0];
-              }
-              return updated;
-            });
-          }
-        }).catch(error => {
+        void prefillLastActivityDate().catch(error => {
           console.error('Error pre-filling activity date:', error);
         });
       }
@@ -357,6 +365,21 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
     return Object.keys(newErrors).length === 0;
   };
 
+  const buildCommonActivityData = (notesWithContact) => ({
+    conversationNotes: notesWithContact,
+    nextAction: formData.nextAction,
+    nextActionDate: formData.nextActionDate,
+    phoneNumber: formData.phoneNumber || phoneNumber || null,
+    email: formData.email || email || null,
+    linkedInUrl: formData.linkedInUrl || linkedInProfileUrl || null,
+    status: formData.status || null,
+    linkedInAccountName: formData.linkedInAccountName || null,
+    lnRequestSent: formData.lnRequestSent || null,
+    connected: formData.connected || null,
+    callNumber: formData.callNumber || null,
+    callStatus: formData.callStatus || null
+  });
+
   
 
 
@@ -379,52 +402,32 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
       const callDateValue = formData.callDate && formData.callDate.trim() ? formData.callDate.trim() : null;
       const emailDateValue = formData.emailDate && formData.emailDate.trim() ? formData.emailDate.trim() : null;
       const linkedinDateValue = formData.linkedinDate && formData.linkedinDate.trim() ? formData.linkedinDate.trim() : null;
+      const commonActivityData = buildCommonActivityData(notesWithContact);
+      const activityDates = {
+        callDate: callDateValue,
+        emailDate: emailDateValue,
+        linkedinDate: linkedinDateValue
+      };
       
       if (editMode && activityId) {
         // Update existing activity
         response = await API.put(`/activities/${activityId}`, {
           subject: formData.subject,
           template: formData.message,
-          conversationNotes: notesWithContact,
-          nextAction: formData.nextAction,
-          nextActionDate: formData.nextActionDate,
-          phoneNumber: formData.phoneNumber || phoneNumber || null,
-          email: formData.email || email || null,
-          linkedInUrl: formData.linkedInUrl || linkedInProfileUrl || null,
-          status: formData.status || null,
-          linkedInAccountName: formData.linkedInAccountName || null,
-          lnRequestSent: formData.lnRequestSent || null,
-          connected: formData.connected || null,
-          callNumber: formData.callNumber || null,
-          callStatus: formData.callStatus || null,
-          callDate: callDateValue,
-          emailDate: emailDateValue,
-          linkedinDate: linkedinDateValue
+          ...commonActivityData,
+          ...activityDates
         });
       } else {
         // Create new activity
         response = await API.post('/activities', {
-        projectId,
+          projectId,
           contactId: contactId || null,
-        type,
-        subject: formData.subject,
-        template: formData.message,
+          type,
+          subject: formData.subject,
+          template: formData.message,
           outcome: null, // Outcome is not used for any activity types
-        conversationNotes: notesWithContact,
-        nextAction: formData.nextAction,
-          nextActionDate: formData.nextActionDate,
-          phoneNumber: formData.phoneNumber || phoneNumber || null,
-          email: formData.email || email || null,
-          linkedInUrl: formData.linkedInUrl || linkedInProfileUrl || null,
-          status: formData.status || null,
-          linkedInAccountName: formData.linkedInAccountName || null,
-          lnRequestSent: formData.lnRequestSent || null,
-          connected: formData.connected || null,
-          callNumber: formData.callNumber || null,
-          callStatus: formData.callStatus || null,
-          callDate: callDateValue,
-          emailDate: emailDateValue,
-          linkedinDate: linkedinDateValue
+          ...commonActivityData,
+          ...activityDates
         });
       }
 
@@ -733,17 +736,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                     >
                       {savingField.phone ? (
                         <>
-                          <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
+                          <LoadingSpinner className="animate-spin h-3 w-3" />
                           Saving...
                         </>
                       ) : (
                         <>
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <SaveCheckIcon className="h-3 w-3" />
                           Save
                         </>
                       )}
@@ -787,17 +785,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                     >
                       {savingField.email ? (
                         <>
-                          <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
+                          <LoadingSpinner className="animate-spin h-3 w-3" />
                           Saving...
                         </>
                       ) : (
                         <>
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <SaveCheckIcon className="h-3 w-3" />
                           Save
                         </>
                       )}
@@ -870,17 +863,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                     >
                       {savingField.linkedin ? (
                         <>
-                          <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
+                      <LoadingSpinner className="animate-spin h-3 w-3" />
                           Saving...
                         </>
                   ) : (
                         <>
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
+                          <SaveCheckIcon className="h-3 w-3" />
                           Save
                         </>
                       )}
@@ -1241,16 +1229,9 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
                       <option value="CIP">CIP</option>
                       <option value="No Reply">No Reply</option>
                       <option value="Not Interested">Not Interested</option>
-                      <option value="Meeting Proposed">Meeting Proposed</option>
-                      <option value="Meeting Scheduled">Meeting Scheduled</option>
-                      <option value="In-Person Meeting">In-Person Meeting</option>
-                      <option value="Meeting Completed">Meeting Completed</option>
-                      <option value="SQL">SQL</option>
-                      <option value="Tech Discussion">Tech Discussion</option>
-                      <option value="WON">WON</option>
-                      <option value="Lost">Lost</option>
-                      <option value="Low Potential - Open">Low Potential - Open</option>
-                      <option value="Potential Future">Potential Future</option>
+                      {ACTIVITY_STATUSES.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
                   </>
                 )}
               </select>
@@ -1534,17 +1515,12 @@ export default function ActivityLogModal({ isOpen, onClose, type, contactName, c
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <LoadingSpinner className="animate-spin h-4 w-4" />
                     Saving...
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    <SaveCheckIcon className="w-4 h-4" />
                     Save Activity
                   </>
                 )}

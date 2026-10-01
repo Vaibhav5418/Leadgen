@@ -1,36 +1,8 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import API from '../api/axios';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-// Lazy load chart components
-const Line = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Line })));
-const Bar = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Bar })));
-const Doughnut = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Doughnut })));
-const Pie = lazy(() => import('react-chartjs-2').then(module => ({ default: module.Pie })));
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import { Bar, Doughnut, Line, Pie } from '../utils/dashboardChartSetup';
+import ActivityChart from '../components/charts/ActivityChart';
 
 // Simple in-memory caches for heavy analytics (per browser tab)
 // Keyed by projectId or 'all' so second loads are much faster.
@@ -925,6 +897,13 @@ export default function ProspectDashboard() {
     );
   };
 
+  const visibleActivityTypes = analytics?.activities?.byType.filter(activity => {
+    const type = activity.type.toLowerCase();
+    return (type === 'call' && enabledActivityTypes.includes('call')) ||
+           (type === 'email' && enabledActivityTypes.includes('email')) ||
+           (type === 'linkedin' && enabledActivityTypes.includes('linkedin'));
+  }) || [];
+
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
@@ -1232,110 +1211,37 @@ export default function ProspectDashboard() {
 
             {/* Charts Row 1 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Activity Trends */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Trends (Last 7 Days)</h3>
-                {analytics.activities.trends.labels.length > 0 ? (
-                  <div className="h-64">
-                    <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600"></div></div>}>
-                      <Line
-                        data={{
-                          labels: analytics.activities.trends.labels,
-                          datasets: [
-                            // Only include Calls dataset if coldCalling channel is enabled
-                            ...(enabledActivityTypes.includes('call') ? [{
-                              label: 'Calls',
-                              data: analytics.activities.trends.call,
-                              borderColor: 'rgb(34, 197, 94)',
-                              backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                              tension: 0.4,
-                            }] : []),
-                            // Only include Emails dataset if coldEmail channel is enabled
-                            ...(enabledActivityTypes.includes('email') ? [{
-                              label: 'Emails',
-                              data: analytics.activities.trends.email,
-                              borderColor: 'rgb(59, 130, 246)',
-                              backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                              tension: 0.4,
-                            }] : []),
-                            // Only include LinkedIn dataset if linkedInOutreach channel is enabled
-                            ...(enabledActivityTypes.includes('linkedin') ? [{
-                              label: 'LinkedIn',
-                              data: analytics.activities.trends.linkedin,
-                              borderColor: 'rgb(168, 85, 247)',
-                              backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                              tension: 0.4,
-                            }] : []),
-                          ],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: { position: 'top' },
-                          },
-                          scales: {
-                            y: { beginAtZero: true },
-                          },
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <p className="text-sm">No activity data available</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Activity Distribution */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Activity Distribution</h3>
-                {analytics.activities.byType.length > 0 ? (
-                  <div className="h-64">
-                    <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-2 border-gray-200 border-t-blue-600"></div></div>}>
-                      <Doughnut
-                        data={{
-                          labels: analytics.activities.byType
-                            .filter(a => {
-                              const type = a.type.toLowerCase();
-                              return (type === 'call' && enabledActivityTypes.includes('call')) ||
-                                     (type === 'email' && enabledActivityTypes.includes('email')) ||
-                                     (type === 'linkedin' && enabledActivityTypes.includes('linkedin'));
-                            })
-                            .map(a => a.type.charAt(0).toUpperCase() + a.type.slice(1)),
-                          datasets: [{
-                            data: analytics.activities.byType
-                              .filter(a => {
-                                const type = a.type.toLowerCase();
-                                return (type === 'call' && enabledActivityTypes.includes('call')) ||
-                                       (type === 'email' && enabledActivityTypes.includes('email')) ||
-                                       (type === 'linkedin' && enabledActivityTypes.includes('linkedin'));
-                              })
-                              .map(a => a.count),
-                            backgroundColor: [
-                              ...(enabledActivityTypes.includes('call') ? ['rgb(34, 197, 94)'] : []),
-                              ...(enabledActivityTypes.includes('email') ? ['rgb(59, 130, 246)'] : []),
-                              ...(enabledActivityTypes.includes('linkedin') ? ['rgb(168, 85, 247)'] : []),
-                            ],
-                          }],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: { position: 'bottom' },
-                          },
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                ) : (
-                  <div className="h-64 flex items-center justify-center text-gray-500">
-                    <p className="text-sm">No activity data available</p>
-                  </div>
-                )}
-              </div>
+              <ActivityChart
+                title="Activity Trends (Last 7 Days)"
+                hasData={analytics.activities.trends.labels.length > 0}
+                chartComponent={Line}
+                data={{
+                  labels: analytics.activities.trends.labels,
+                  datasets: [
+                    ...(enabledActivityTypes.includes('call') ? [{ label: 'Calls', data: analytics.activities.trends.call, borderColor: 'rgb(34, 197, 94)', backgroundColor: 'rgba(34, 197, 94, 0.1)', tension: 0.4 }] : []),
+                    ...(enabledActivityTypes.includes('email') ? [{ label: 'Emails', data: analytics.activities.trends.email, borderColor: 'rgb(59, 130, 246)', backgroundColor: 'rgba(59, 130, 246, 0.1)', tension: 0.4 }] : []),
+                    ...(enabledActivityTypes.includes('linkedin') ? [{ label: 'LinkedIn', data: analytics.activities.trends.linkedin, borderColor: 'rgb(168, 85, 247)', backgroundColor: 'rgba(168, 85, 247, 0.1)', tension: 0.4 }] : [])
+                  ]
+                }}
+                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }}
+              />
+              <ActivityChart
+                title="Activity Distribution"
+                hasData={analytics.activities.byType.length > 0}
+                chartComponent={Doughnut}
+                data={{
+                  labels: visibleActivityTypes.map(a => a.type.charAt(0).toUpperCase() + a.type.slice(1)),
+                  datasets: [{
+                    data: visibleActivityTypes.map(a => a.count),
+                    backgroundColor: [
+                      ...(enabledActivityTypes.includes('call') ? ['rgb(34, 197, 94)'] : []),
+                      ...(enabledActivityTypes.includes('email') ? ['rgb(59, 130, 246)'] : []),
+                      ...(enabledActivityTypes.includes('linkedin') ? ['rgb(168, 85, 247)'] : [])
+                    ]
+                  }]
+                }}
+                options={{ responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }}
+              />
             </div>
 
             {/* Stage Distribution */}

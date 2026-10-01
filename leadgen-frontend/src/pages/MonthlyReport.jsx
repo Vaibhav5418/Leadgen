@@ -4,6 +4,9 @@ import API from '../api/axios';
 import * as XLSX from 'xlsx-js-style';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { COLD_CALLING_REPORT_COLUMNS } from '../config/reportColumns';
+import { CALL_STATUS_BY_METRIC } from '../config/reportColumns';
+import ProspectMetricTable from '../components/prospects/ProspectMetricTable';
 
 export default function MonthlyReport() {
   const { id } = useParams();
@@ -629,23 +632,7 @@ export default function MonthlyReport() {
     const allMetrics = [];
 
     if (enabledChannels.call && !enabledChannels.linkedin && !enabledChannels.email) {
-      allMetrics.push(
-        { key: 'dataAllocated', label: 'Data Allocated', section: 'Cold Calling', bold: false },
-        { key: 'interested', label: 'Interested', section: 'Cold Calling', bold: true },
-        { key: 'notInterested', label: 'Not Interested', section: 'Cold Calling', bold: true },
-        { key: 'ring', label: 'Ring', section: 'Cold Calling', bold: false },
-        { key: 'busy', label: 'Busy', section: 'Cold Calling', bold: false, highlight: true },
-        { key: 'hangUp', label: 'Hang Up', section: 'Cold Calling', bold: false },
-        { key: 'callBack', label: 'Call Back', section: 'Cold Calling', bold: false },
-        { key: 'switchOff', label: 'Switch Off', section: 'Cold Calling', bold: false },
-        { key: 'detailsShared', label: 'Detailed Shared', section: 'Cold Calling', bold: true, highlight: true },
-        { key: 'future', label: 'Future', section: 'Cold Calling', bold: false },
-        { key: 'invalid', label: 'Invalid', section: 'Cold Calling', bold: false },
-        { key: 'demoBooked', label: 'Demo Booked', section: 'Cold Calling', bold: true, highlight: true, highlightDark: true },
-        { key: 'followUps', label: 'Follow Ups', section: 'Cold Calling', bold: true },
-        { key: 'totalCalls', label: 'Total Calls', section: 'Cold Calling', bold: true },
-        { key: 'freshCalls', label: '(Fresh Calls + FollowUpS)', section: 'Cold Calling', bold: false, isFormula: true }
-      );
+      allMetrics.push(...COLD_CALLING_REPORT_COLUMNS.map(metric => ({ ...metric, section: 'Cold Calling' })));
     } else if (enabledChannels.linkedin) {
       allMetrics.push(
         { key: 'dataResearch', label: 'Data Research manually', section: 'Linked IN', bold: false },
@@ -661,22 +648,9 @@ export default function MonthlyReport() {
       );
       
       if (enabledChannels.call) {
-        allMetrics.push(
-          { key: 'dataAllocated', label: 'Data Allocated', section: 'Cold Calling', bold: false },
-          { key: 'interested', label: 'Interested', section: 'Cold Calling', bold: true },
-          { key: 'notInterested', label: 'Not Interested', section: 'Cold Calling', bold: true },
-          { key: 'ring', label: 'Ring', section: 'Cold Calling', bold: false },
-          { key: 'busy', label: 'Busy', section: 'Cold Calling', bold: false, highlight: true },
-          { key: 'hangUp', label: 'Hang Up', section: 'Cold Calling', bold: false },
-          { key: 'callBack', label: 'Call Back', section: 'Cold Calling', bold: false },
-          { key: 'switchOff', label: 'Switch Off', section: 'Cold Calling', bold: false },
-          { key: 'detailsShared', label: 'Detailed Shared', section: 'Cold Calling', bold: true, highlight: true },
-          { key: 'future', label: 'Future', section: 'Cold Calling', bold: false },
-          { key: 'invalid', label: 'Invalid', section: 'Cold Calling', bold: false },
-          { key: 'demoBooked', label: 'Demo Booked', section: 'Cold Calling', bold: true, highlight: true, highlightDark: true },
-          { key: 'followUps', label: 'Follow Ups', section: 'Cold Calling', bold: true },
-          { key: 'totalCalls', label: 'Total Calls', section: 'Cold Calling', bold: true }
-        );
+        allMetrics.push(...COLD_CALLING_REPORT_COLUMNS
+          .filter(metric => metric.key !== 'freshCalls')
+          .map(metric => ({ ...metric, section: 'Cold Calling' })));
       }
       
       if (enabledChannels.email) {
@@ -873,28 +847,6 @@ export default function MonthlyReport() {
               (!latestCall.callNumber && firstCallPeriod === period);
             return !isFresh;
           }
-          case 'interested':
-            return latestCall?.callStatus === 'Interested';
-          case 'notInterested':
-            return latestCall?.callStatus === 'Not Interested';
-          case 'ring':
-            return latestCall?.callStatus === 'Ring';
-          case 'busy':
-            return latestCall?.callStatus === 'Busy';
-          case 'hangUp':
-            return latestCall?.callStatus === 'Hang Up';
-          case 'callBack':
-            return latestCall?.callStatus === 'Call Back';
-          case 'switchOff':
-            return latestCall?.callStatus === 'Switch Off';
-          case 'detailsShared':
-            return latestCall?.callStatus === 'Details Shared';
-          case 'future':
-            return latestCall?.callStatus === 'Future';
-          case 'invalid':
-            return latestCall?.callStatus === 'Invalid';
-          case 'demoBooked':
-            return latestCall?.callStatus === 'Demo Booked';
           case 'dataAllocated':
             // For data allocated, check if contact was created in this period
             if (contact.createdAt) {
@@ -903,7 +855,9 @@ export default function MonthlyReport() {
             }
             return false;
           default:
-            return false;
+            return CALL_STATUS_BY_METRIC[metric]
+              ? latestCall?.callStatus === CALL_STATUS_BY_METRIC[metric]
+              : false;
         }
       } else if (channel === 'linkedin') {
         // Filter activities to only those in this period
@@ -2138,29 +2092,18 @@ export default function MonthlyReport() {
                 </div>
               ) : (() => {
                 if (filteredProspectsForModal.length === 0) {
-                  return (
+                  return <ProspectMetricTable prospects={filteredProspectsForModal} renderRow={() => null} />;
+                  /* return (
                     <div className="text-center py-12 text-gray-500">
                       <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       <p className="text-sm font-medium">No prospects found for this metric</p>
                     </div>
-                  );
+                  ); */
                 }
 
-                return (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">CONTACT</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">COMPANY</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">DATE</th>
-                          <th className="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">STATUS</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {filteredProspectsForModal.map((contact) => {
+                const renderMonthlyProspectRow = (contact) => {
                           const contactIdStr = (contact._id?.toString ? contact._id.toString() : contact._id) || '';
                           
                           // Find the MOST RECENT activity for this period (matches unique/latest logic)
@@ -2223,11 +2166,9 @@ export default function MonthlyReport() {
                               </td>
                             </tr>
                           );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                );
+                };
+
+                return <ProspectMetricTable prospects={filteredProspectsForModal} renderRow={renderMonthlyProspectRow} />;
               })()}
             </div>
           </div>

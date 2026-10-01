@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import API from '../api/axios';
+import PasswordInput from '../components/auth/PasswordInput';
+import AuthPageLayout from '../components/auth/AuthPageLayout';
+import LoadingButton from '../components/common/LoadingButton';
+import { getPasswordResetError, resetPassword, validatePasswordReset } from '../services/authService';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -133,39 +137,16 @@ export default function Login() {
     setError('');
     setSuccess('');
 
-    if (!formData.email.trim()) {
-      setError('Email address is required');
-      return;
-    }
-
-    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
-    if (!emailRegex.test(formData.email.trim())) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    if (!formData.newPassword || !formData.newPassword.trim()) {
-      setError('New password is required');
-      return;
-    }
-
-    if (formData.newPassword.length < 6) {
-      setError('Password must be at least 6 characters long');
-      return;
-    }
-
-    if (formData.newPassword !== formData.confirmPassword) {
-      setError('Passwords do not match');
+    const validationError = validatePasswordReset(formData);
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
     setLoading(true);
 
     try {
-      const response = await API.post('/auth/reset-password', {
-        email: formData.email.trim(),
-        newPassword: formData.newPassword.trim()
-      });
+      const response = await resetPassword(formData.email, formData.newPassword);
 
       if (response.data.success) {
         setSuccess('Password has been reset successfully! Redirecting to login...');
@@ -181,36 +162,18 @@ export default function Login() {
         }, 2000);
       }
     } catch (err) {
-      if (err.code === 'ERR_NETWORK' || err.message === 'Network Error' || !err.response) {
-        setError('Cannot connect to server. Please make sure the backend server is running.');
-      } else {
-        setError(err.response?.data?.error || err.message || 'Failed to reset password');
-      }
+      setError(getPasswordResetError(err));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-              <div className="w-6 h-6 bg-blue-600 rounded-full"></div>
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Outbound SaaS</h1>
-          <p className="text-gray-600">
-            {mode === 'login' && 'Welcome back, please sign in to your account'}
-            {mode === 'register' && "Let's create your account to get started"}
-            {mode === 'forgot' && 'Reset your account password'}
-          </p>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all">
+    <AuthPageLayout
+      title="Outbound SaaS"
+      subtitle={mode === 'login' ? 'Welcome back, please sign in to your account' : mode === 'register' ? "Let's create your account to get started" : 'Reset your account password'}
+      cardClassName="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 transition-all"
+    >
           {/* Toggle Login/Register (Only when not in forgot mode) */}
           {mode !== 'forgot' ? (
             <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-lg">
@@ -330,8 +293,11 @@ export default function Login() {
                   )}
                 </div>
                 <div className="relative">
-                  <input
+                  <PasswordInput
                     id="login-password"
+                    showPassword={showPassword}
+                    onToggle={() => setShowPassword(!showPassword)}
+                    externalToggle
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
@@ -407,8 +373,11 @@ export default function Login() {
                   New Password
                 </label>
                 <div className="relative">
-                  <input
+                   <PasswordInput
                     id="forgot-new-password"
+                     showPassword={showNewPassword}
+                     onToggle={() => setShowNewPassword(!showNewPassword)}
+                     externalToggle
                     type={showNewPassword ? 'text' : 'password'}
                     name="newPassword"
                     value={formData.newPassword}
@@ -442,8 +411,11 @@ export default function Login() {
                   Confirm New Password
                 </label>
                 <div className="relative">
-                  <input
+                   <PasswordInput
                     id="forgot-confirm-password"
+                     showPassword={showConfirmPassword}
+                     onToggle={() => setShowConfirmPassword(!showConfirmPassword)}
+                     externalToggle
                     type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}
@@ -491,8 +463,6 @@ export default function Login() {
               </button>
             </form>
           )}
-        </div>
-
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-6">
           {mode === 'login' && (
@@ -529,8 +499,7 @@ export default function Login() {
             </>
           )}
         </p>
-      </div>
-    </div>
+    </AuthPageLayout>
   );
 }
 
